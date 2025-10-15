@@ -54,6 +54,9 @@ export default makeScene2D(function* (view) {
     </>
   );
 
+  circle().save();
+  rect().save();
+
   yield* waitFor(1.0);
 
   yield* all(
@@ -69,6 +72,13 @@ export default makeScene2D(function* (view) {
     circle().scale(1.5, 1),
     rect().rotation(360, 1)
   );
+  
+  yield* waitFor(1.0);
+
+  yield* all(
+    circle().restore(1),
+    rect().restore(1)
+  )
 });`;
 
 export interface EditorCallbacks {
