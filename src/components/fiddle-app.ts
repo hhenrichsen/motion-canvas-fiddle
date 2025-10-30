@@ -96,6 +96,41 @@ export class FiddleApp extends LitElement {
       align-items: center;
     }
 
+    .controls base-button {
+      min-width: 110px;
+    }
+
+    .button-icon {
+      display: none;
+      width: 18px;
+      height: 18px;
+      /* Filter to convert black to ctp-mocha-text (#cdd6f4) */
+      filter: brightness(0) saturate(100%) invert(93%) sepia(8%) saturate(661%) hue-rotate(192deg) brightness(101%) contrast(93%);
+    }
+
+    base-button[variant="primary"] .button-icon {
+      /* Filter to convert black to ctp-mocha-base (#1e1e2e) */
+      filter: brightness(0) saturate(100%) invert(9%) sepia(9%) saturate(1562%) hue-rotate(202deg) brightness(97%) contrast(90%);
+    }
+
+    .button-text {
+      display: inline;
+    }
+
+    @media (max-width: 768px) {
+      .controls base-button {
+        min-width: 40px;
+        padding: 8px;
+      }
+
+      .button-icon {
+        display: inline-block;
+      }
+
+      .button-text {
+        display: none;
+      }
+    }
 
     .split-view {
       display: flex;
@@ -157,7 +192,6 @@ export class FiddleApp extends LitElement {
 
     #editor::-webkit-scrollbar-thumb {
       background: var(--ctp-mocha-surface0);
-      border-radius: 4px;
     }
 
     #editor::-webkit-scrollbar-thumb:hover {
@@ -188,8 +222,6 @@ export class FiddleApp extends LitElement {
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
-      border-radius: 8px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
       /* Canvas background is set by Motion Canvas project settings */
     }
 
@@ -222,7 +254,6 @@ export class FiddleApp extends LitElement {
       width: 40px;
       height: 4px;
       background: var(--ctp-mocha-surface2);
-      border-radius: 2px;
     }
 
     .desktop-controls {
@@ -230,14 +261,12 @@ export class FiddleApp extends LitElement {
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(24, 24, 37, 0.95);
+      background: var(--ctp-mocha-mantle);
       border: 1px solid var(--ctp-mocha-surface0);
-      border-radius: 8px;
       padding: 8px;
       display: flex;
       align-items: center;
       gap: 12px;
-      backdrop-filter: blur(10px);
       z-index: 50;
     }
 
@@ -250,10 +279,9 @@ export class FiddleApp extends LitElement {
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: #ef4444;
-      color: white;
+      background: var(--ctp-mocha-red);
+      color: var(--ctp-mocha-base);
       padding: 12px 20px;
-      border-radius: 8px;
       font-size: 14px;
       max-width: 80%;
       display: none;
@@ -288,7 +316,6 @@ export class FiddleApp extends LitElement {
       .controls {
         gap: 8px;
       }
-
 
       .split-view {
         flex-direction: column;
@@ -356,13 +383,16 @@ export class FiddleApp extends LitElement {
           <h1>Motion Canvas Fiddle</h1>
           <div class="controls">
             <base-button @click=${this.handleResetCode}>
-              Reset Code
+              <img class="button-icon" src="/restart.svg" alt="Reset" />
+              <span class="button-text">Reset Code</span>
             </base-button>
             <base-button @click=${this.showSettingsModal}>
-              ⚙️ Settings
+              <img class="button-icon" src="/cog.svg" alt="Settings" />
+              <span class="button-text">Settings</span>
             </base-button>
             <base-button variant="primary" @click=${this.showExportModal}>
-              📹 Export MP4
+              <img class="button-icon" src="/video-image.svg" alt="Export" />
+              <span class="button-text">Export MP4</span>
             </base-button>
           </div>
         </div>

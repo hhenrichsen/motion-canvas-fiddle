@@ -15,15 +15,20 @@ export class SecurityWarningModal extends BaseModal {
     BaseModal.styles,
     css`
       .warning-icon {
-        font-size: 48px;
         text-align: center;
-        margin-bottom: var(--spacing-2);
+        margin-bottom: 20px;
+        color: var(--ctp-mocha-yellow);
+      }
+
+      .warning-icon svg {
+        width: 64px;
+        height: 64px;
       }
 
       .message {
         font-size: 14px;
         line-height: 1.5;
-        color: #ccc;
+        color: var(--ctp-mocha-subtext0);
         margin-bottom: 16px;
       }
 
@@ -32,7 +37,7 @@ export class SecurityWarningModal extends BaseModal {
       }
 
       .message strong {
-        color: #f59e0b;
+        color: var(--ctp-mocha-yellow);
         font-weight: 600;
       }
 
@@ -41,8 +46,7 @@ export class SecurityWarningModal extends BaseModal {
         align-items: center;
         gap: 8px;
         padding: 12px;
-        background: #1a1a1a;
-        border-radius: 6px;
+        background: var(--ctp-mocha-surface1);
         margin-bottom: 8px;
       }
 
@@ -50,13 +54,14 @@ export class SecurityWarningModal extends BaseModal {
         width: 18px;
         height: 18px;
         cursor: pointer;
+        accent-color: var(--ctp-mocha-sky);
       }
 
       .checkbox-container label {
         cursor: pointer;
         user-select: none;
         font-size: 13px;
-        color: #999;
+        color: var(--ctp-mocha-subtext1);
         margin: 0;
       }
     `,
@@ -95,7 +100,11 @@ export class SecurityWarningModal extends BaseModal {
 
   protected renderBody(): TemplateResult {
     return html`
-      <div class="warning-icon">⚠️</div>
+      <div class="warning-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M13 14h-2V9h2m0 9h-2v-2h2M1 21h22L12 2z"/>
+        </svg>
+      </div>
 
       <div class="message">
         <strong>Security Notice:</strong> This page contains code loaded from a

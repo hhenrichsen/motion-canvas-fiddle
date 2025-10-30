@@ -21,8 +21,7 @@ export class BaseButton extends LitElement {
     }
 
     .btn {
-      border: none;
-      border-radius: 6px;
+      border: 1px solid transparent;
       cursor: pointer;
       font-weight: 500;
       transition: all 0.2s;
@@ -52,6 +51,7 @@ export class BaseButton extends LitElement {
     .btn--default {
       background: var(--ctp-mocha-surface0);
       color: var(--ctp-mocha-text);
+      border-color: var(--ctp-mocha-surface2);
     }
 
     .btn--default:hover:not(:disabled) {
@@ -59,30 +59,33 @@ export class BaseButton extends LitElement {
     }
 
     .btn--primary {
-      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-      color: #fff;
+      background: var(--ctp-mocha-sky);
+      color: var(--ctp-mocha-base);
+      border-color: var(--ctp-mocha-sky);
     }
 
     .btn--primary:hover:not(:disabled) {
-      opacity: 0.9;
+      opacity: 0.8;
     }
 
     .btn--danger {
-      background: #ef4444;
-      color: #fff;
+      background: var(--ctp-mocha-red);
+      color: var(--ctp-mocha-base);
+      border-color: var(--ctp-mocha-red);
     }
 
     .btn--danger:hover:not(:disabled) {
-      background: #dc2626;
+      opacity: 0.8;
     }
 
     .btn--cancel {
-      background: #333;
-      color: #fff;
+      background: var(--ctp-mocha-surface1);
+      color: var(--ctp-mocha-text);
+      border-color: var(--ctp-mocha-surface2);
     }
 
     .btn--cancel:hover:not(:disabled) {
-      background: #444;
+      background: var(--ctp-mocha-surface2);
     }
   `;
 

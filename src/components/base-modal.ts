@@ -33,14 +33,14 @@ export abstract class BaseModal extends LitElement {
     }
 
     .modal-content {
-      background: #2a2a2a;
-      border-radius: 12px;
+      background: var(--ctp-mocha-surface0);
       padding: 0;
       width: 500px;
       max-width: 90%;
       max-height: 90vh;
       overflow: auto;
       animation: slideIn 0.2s ease;
+      border: 1px solid var(--ctp-mocha-surface1);
     }
 
     @keyframes slideIn {
@@ -56,7 +56,7 @@ export abstract class BaseModal extends LitElement {
 
     .modal-header {
       padding: 20px 24px;
-      border-bottom: 1px solid #333;
+      border-bottom: 1px solid var(--ctp-mocha-surface1);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -66,13 +66,13 @@ export abstract class BaseModal extends LitElement {
       margin: 0;
       font-size: 18px;
       font-weight: 600;
-      color: #fff;
+      color: var(--ctp-mocha-text);
     }
 
     .close-btn {
       background: none;
       border: none;
-      color: #999;
+      color: var(--ctp-mocha-subtext1);
       font-size: 24px;
       cursor: pointer;
       padding: 0;
@@ -81,13 +81,12 @@ export abstract class BaseModal extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 6px;
       transition: background 0.2s, color 0.2s;
     }
 
     .close-btn:hover {
-      background: #333;
-      color: #fff;
+      background: var(--ctp-mocha-surface1);
+      color: var(--ctp-mocha-text);
     }
 
     .close-btn:disabled {
@@ -101,16 +100,16 @@ export abstract class BaseModal extends LitElement {
 
     .modal-footer {
       padding: 20px 24px;
-      border-top: 1px solid #333;
+      border-top: 1px solid var(--ctp-mocha-surface1);
       display: flex;
       justify-content: flex-end;
       gap: 12px;
+      background: var(--ctp-mocha-mantle);
     }
 
     @media (max-width: 600px) {
       .modal-content {
         width: 95%;
-        border-radius: 8px;
       }
 
       .modal-header {

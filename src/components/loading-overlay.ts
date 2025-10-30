@@ -19,7 +19,7 @@ export class LoadingOverlay extends LitElement {
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
+      background: var(--ctp-mocha-base);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -43,8 +43,7 @@ export class LoadingOverlay extends LitElement {
       width: 120px;
       height: 120px;
       margin: 0 auto 30px;
-      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-      border-radius: 24px;
+      background: var(--ctp-mocha-sky);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -65,11 +64,11 @@ export class LoadingOverlay extends LitElement {
     .logo svg {
       width: 80px;
       height: 80px;
-      fill: white;
+      fill: var(--ctp-mocha-base);
     }
 
     h2 {
-      color: #ffffff;
+      color: var(--ctp-mocha-text);
       font-size: 24px;
       font-weight: 600;
       margin: 0 0 20px 0;
@@ -77,7 +76,7 @@ export class LoadingOverlay extends LitElement {
     }
 
     .message {
-      color: #a0a0a0;
+      color: var(--ctp-mocha-subtext0);
       font-size: 14px;
       margin-bottom: 30px;
       min-height: 20px;
@@ -86,21 +85,19 @@ export class LoadingOverlay extends LitElement {
     .progress-bar {
       width: 100%;
       height: 4px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 2px;
+      background: var(--ctp-mocha-surface0);
       overflow: hidden;
       position: relative;
     }
 
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
-      border-radius: 2px;
+      background: var(--ctp-mocha-sky);
       transition: width 0.3s ease;
     }
 
     .progress-text {
-      color: #666;
+      color: var(--ctp-mocha-overlay0);
       font-size: 12px;
       margin-top: 10px;
     }

@@ -32,7 +32,7 @@ export class ExportModal extends BaseModal {
 
       label {
         display: block;
-        color: #999;
+        color: var(--ctp-mocha-subtext1);
         font-size: 14px;
         margin-bottom: 8px;
         font-weight: 500;
@@ -41,22 +41,20 @@ export class ExportModal extends BaseModal {
       select {
         width: 100%;
         padding: 8px 12px;
-        background: #1a1a1a;
-        border: 1px solid #333;
-        border-radius: 6px;
-        color: #fff;
+        background: var(--ctp-mocha-surface1);
+        border: 1px solid var(--ctp-mocha-surface2);
+        color: var(--ctp-mocha-text);
         font-size: 14px;
         transition: border-color 0.2s;
       }
 
       select:focus {
         outline: none;
-        border-color: #3b82f6;
+        border-color: var(--ctp-mocha-sky);
       }
 
       .export-progress {
-        background: #1a1a1a;
-        border-radius: 8px;
+        background: var(--ctp-mocha-surface1);
         padding: 20px;
         margin-top: 20px;
       }
@@ -69,32 +67,31 @@ export class ExportModal extends BaseModal {
       }
 
       .progress-phase {
-        color: #3b82f6;
+        color: var(--ctp-mocha-sky);
         font-size: 14px;
         font-weight: 500;
       }
 
       .progress-percentage {
-        color: #999;
+        color: var(--ctp-mocha-subtext1);
         font-size: 14px;
       }
 
       .progress-bar {
         height: 8px;
-        background: #333;
-        border-radius: 4px;
+        background: var(--ctp-mocha-surface0);
         overflow: hidden;
         margin-bottom: 12px;
       }
 
       .progress-bar-fill {
         height: 100%;
-        background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+        background: var(--ctp-mocha-sky);
         transition: width 0.3s ease;
       }
 
       .progress-message {
-        color: #666;
+        color: var(--ctp-mocha-overlay0);
         font-size: 13px;
       }
     `
