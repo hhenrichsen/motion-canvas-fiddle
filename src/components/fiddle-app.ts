@@ -410,15 +410,15 @@ export class FiddleApp extends LitElement {
           <h1>Motion Canvas Fiddle</h1>
           <div class="controls">
             <base-button @click=${this.handleResetCode}>
-              <img class="button-icon" src="/restart.svg" alt="Reset" />
+              <img class="button-icon" src="${import.meta.env.BASE_URL}restart.svg" alt="Reset" />
               <span class="button-text">Reset Code</span>
             </base-button>
             <base-button @click=${this.showSettingsModal}>
-              <img class="button-icon" src="/cog.svg" alt="Settings" />
+              <img class="button-icon" src="${import.meta.env.BASE_URL}cog.svg" alt="Settings" />
               <span class="button-text">Settings</span>
             </base-button>
             <base-button variant="primary" @click=${this.showExportModal}>
-              <img class="button-icon" src="/video-image.svg" alt="Export" />
+              <img class="button-icon" src="${import.meta.env.BASE_URL}video-image.svg" alt="Export" />
               <span class="button-text">Export MP4</span>
             </base-button>
           </div>
@@ -428,13 +428,13 @@ export class FiddleApp extends LitElement {
             <div class="panel-header desktop-only">
               <span>Editor</span>
               <button class="run-btn" @click=${this.handleRunAnimation} title="Save and run animation (Ctrl+S)">
-                <img src="/save.svg" alt="Save & Run" />
+                <img src="${import.meta.env.BASE_URL}save.svg" alt="Save & Run" />
               </button>
             </div>
             <div class="panel-header mobile-only">
               <span>Editor</span>
               <button class="run-btn" @click=${this.handleRunAnimation} title="Save and run animation (Ctrl+S)">
-                <img src="/save.svg" alt="Save & Run" />
+                <img src="${import.meta.env.BASE_URL}save.svg" alt="Save & Run" />
               </button>
             </div>
             <div id="editor"></div>

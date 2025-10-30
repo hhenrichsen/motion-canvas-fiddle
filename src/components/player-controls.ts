@@ -119,12 +119,14 @@ export class PlayerControls extends LitElement {
     return html`
       <button class="player-btn" @click=${this.handlePlayPause}>
         <img
-          src="${this.playing ? "/pause.svg" : "/play.svg"}"
+          src="${this.playing
+            ? `${import.meta.env.BASE_URL}pause.svg`
+            : `${import.meta.env.BASE_URL}play.svg`}"
           alt="${this.playing ? "Pause" : "Play"}"
         />
       </button>
       <button class="player-btn" @click=${this.handleReset}>
-        <img src="/skip-backwards.svg" alt="Reset" />
+        <img src="${import.meta.env.BASE_URL}skip-backwards.svg" alt="Reset" />
       </button>
       <div
         class="progress-bar"
