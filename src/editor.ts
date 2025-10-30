@@ -24,6 +24,7 @@ import {
 } from "@codemirror/autocomplete";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { catppuccinMocha } from "@catppuccin/codemirror";
+import { autocomplete } from "./autocomplete";
 
 const DEFAULT_CODE = `import { makeScene2D } from '@motion-canvas/2d';
 import { waitFor, all, createRef } from '@motion-canvas/core';
@@ -102,6 +103,7 @@ export function createEditor(
     bracketMatching(),
     closeBrackets(),
     autocompletion(),
+    autocomplete(),
     highlightSelectionMatches(),
     foldGutter(),
     javascript({ jsx: true, typescript: true }),
