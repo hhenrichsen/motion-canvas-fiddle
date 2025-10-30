@@ -6,19 +6,22 @@
  */
 import "@catppuccin/palette/css/catppuccin.css";
 
-import { LoadingController } from "./loading";
 import { loadCoreModules, type LazyModules } from "./lazy-imports";
 import { URLStateManager } from "./url-state";
 import type { EditorView } from "@codemirror/view";
+import './components/loading-overlay';
+import './components/fiddle-app';
+import type { LoadingOverlay } from './components/loading-overlay';
+import type { FiddleApp } from './components/fiddle-app';
 
 let editor: EditorView;
 let player: any;
-let ui: any;
+let app: FiddleApp;
 let splitter: any;
 let modules: LazyModules;
 
 async function runAnimation(preserveFrame?: number): Promise<void> {
-  ui.hideError();
+  app.hideError();
 
   try {
     const code = modules.getEditorContent(editor);
@@ -38,12 +41,14 @@ async function runAnimation(preserveFrame?: number): Promise<void> {
     }
   } catch (error: any) {
     console.error("Animation error:", error);
-    ui.showError(error.message);
+    app.showError(error.message);
   }
 }
 
 async function init(): Promise<void> {
-  const loading = new LoadingController();
+  // Create and add loading overlay
+  const loading = document.createElement('loading-overlay') as LoadingOverlay;
+  document.body.appendChild(loading);
 
   try {
     // Load all modules with progress updates
@@ -51,20 +56,25 @@ async function init(): Promise<void> {
       loading.updateProgress(progress, message);
     });
 
-    // Create the app structure after modules are loaded
-    loading.createAppStructure();
+    // Create and add the main app component
+    app = document.createElement('fiddle-app') as FiddleApp;
+    document.body.appendChild(app);
+
+    // Wait for app to be ready
+    await app.updateComplete;
 
     // Capture initial frame, code, and settings from URL before anything else
     const initialFrame = URLStateManager.getInitialFrame();
     const initialCode = URLStateManager.getInitialCode();
     const initialSettings = URLStateManager.getInitialSettings();
 
-    const editorContainer = document.getElementById("editor");
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-
-    if (!editorContainer || !canvas) {
+    // Wait for DOM elements to be available
+    if (!app.editorContainer || !app.canvas) {
       throw new Error("Required DOM elements not found");
     }
+
+    const editorContainer = app.editorContainer;
+    const canvas = app.canvas;
 
     editor = modules.createEditor(editorContainer, {
       onSave: async () => {
@@ -76,21 +86,22 @@ async function init(): Promise<void> {
     });
 
     player = new modules.MotionCanvasPlayer(canvas, {
-      onError: (message: string) => ui.showError(message),
+      onError: (message: string) => app.showError(message),
       onStateChanged: (playing: boolean) => {
-        ui.updatePlayState(playing);
+        app.updatePlayState(playing);
         // Save frame to URL when pausing (but only if we have a meaningful frame)
         if (!playing && player.currentFrame > 0) {
           URLStateManager.updateFrame(player.currentFrame);
         }
       },
       onFrameChanged: (frame: number) =>
-        ui.updateProgress(frame, player.currentDuration),
+        app.updateProgress(frame, player.currentDuration),
       onDurationChanged: (duration: number) =>
-        ui.updateProgress(player.currentFrame, duration),
+        app.updateProgress(player.currentFrame, duration),
     });
 
-    ui = new modules.UIController({
+    // Set callbacks for the app
+    app.callbacks = {
       onResetCode: () => {
         modules.resetEditorToDefault(editor);
         URLStateManager.clearCode();
@@ -114,23 +125,38 @@ async function init(): Promise<void> {
         URLStateManager.updateCode(currentCode);
         await runAnimation(player?.currentFrame);
       },
-    });
+    };
 
-    await player.initialize(initialSettings || undefined);
-    await ui.initialize();
+    // Ensure we have default settings for first load
+    const defaultSettings = {
+      width: 1920,
+      height: 1080,
+      fps: 30,
+      background: '#1a1a1a'
+    };
+
+    const settings = initialSettings ? { ...defaultSettings, ...initialSettings } : defaultSettings;
+    await player.initialize(settings);
+
+    // Explicitly apply project settings to ensure canvas background is set
+    await player.updateProjectSettings(settings);
 
     // Set player for export functionality
-    ui.setPlayer(player);
+    app.player = player;
 
     // Initialize splitter for both desktop and mobile
-    splitter = new modules.SplitterController();
+    // Wait for next frame to ensure DOM is rendered
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    splitter = new modules.SplitterController(app.shadowRoot);
 
-    // Handle window resize to recreate splitter with correct mode
+    // Handle window resize to update splitter mode
     window.addEventListener("resize", () => {
       if (splitter) {
-        splitter.destroy();
+        // Small delay to allow layout to settle
+        setTimeout(() => {
+          splitter.updateForResize();
+        }, 100);
       }
-      splitter = new modules.SplitterController();
     });
 
     // Hide loading screen

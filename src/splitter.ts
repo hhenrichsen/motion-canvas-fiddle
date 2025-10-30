@@ -2,17 +2,31 @@ export class SplitterController {
   private splitter: HTMLElement | null = null;
   private mobileSplitter: HTMLElement | null = null;
   private editorPanel: HTMLElement;
+  private previewPanel: HTMLElement;
   private splitView: HTMLElement;
   private isDragging = false;
   private hasDragged = false;
-  private minPanelSize: number;
-  private isMobile: boolean;
-  private defaultEditorSize: number;
-  private maxEditorSize: number;
+  private minPanelSize = 350;
+  private isMobile = false;
+  private defaultEditorSize = 50;
+  private maxEditorSize = 80;
 
-  constructor() {
-    this.editorPanel = document.querySelector(".editor-panel") as HTMLElement;
-    this.splitView = document.querySelector(".split-view") as HTMLElement;
+  constructor(shadowRoot?: ShadowRoot | null) {
+    const root = shadowRoot || document;
+    this.editorPanel = root.querySelector(".editor-panel") as HTMLElement;
+    this.previewPanel = root.querySelector(".preview-panel") as HTMLElement;
+    this.splitView = root.querySelector(".split-view") as HTMLElement;
+
+    // Always get both splitters
+    this.splitter = root.querySelector("#splitter") as HTMLElement;
+    this.mobileSplitter = root.querySelector("#mobile-splitter") as HTMLElement;
+
+    this.updateMode();
+    this.initialize();
+  }
+
+  private updateMode(): void {
+    const wasDesktop = !this.isMobile;
     this.isMobile = window.innerWidth <= 768;
     this.minPanelSize = this.isMobile ? 100 : 350;
 
@@ -20,12 +34,28 @@ export class SplitterController {
     this.defaultEditorSize = 50; // percentage - always half
     this.maxEditorSize = this.isMobile ? 85 : 80; // percentage
 
-    if (this.isMobile) {
-      this.mobileSplitter = document.getElementById("mobile-splitter");
-    } else {
-      this.splitter = document.getElementById("splitter");
+    // If mode changed, reset panel styles to defaults
+    if (wasDesktop !== !this.isMobile) {
+      this.resetPanelStyles();
     }
+  }
 
+  private resetPanelStyles(): void {
+    // Reset both panels to their default flex values
+    if (this.isMobile) {
+      // Mobile: preview gets 30%, editor gets remainder
+      this.previewPanel.style.flex = '0 0 30%';
+      this.editorPanel.style.flex = '1';
+    } else {
+      // Desktop: editor gets 50%, preview gets remainder
+      this.editorPanel.style.flex = '0 0 50%';
+      this.previewPanel.style.flex = '1 1 auto';
+    }
+  }
+
+  public updateForResize(): void {
+    this.updateMode();
+    this.destroy();
     this.initialize();
   }
 
@@ -125,27 +155,30 @@ export class SplitterController {
 
   private handleVerticalResize(clientY: number): void {
     const splitViewRect = this.splitView.getBoundingClientRect();
-    // Calculate distance from bottom of split view to get the desired editor height
-    const mouseYFromBottom = splitViewRect.bottom - clientY;
+    // Calculate distance from top of split view to get the desired preview height
+    const mouseYFromTop = clientY - splitViewRect.top;
 
-    // Calculate the percentage for the editor panel
+    // Calculate the percentage for the preview panel
     const totalHeight = splitViewRect.height;
     const splitterHeight = 8; // height of the mobile splitter
     const availableHeight = totalHeight - splitterHeight;
 
     // Ensure minimum heights for both panels
-    const minPreviewHeight = this.minPanelSize;
-    const minEditorHeight = this.minPanelSize;
-    const maxEditorHeight = availableHeight - minPreviewHeight;
+    const minPreviewHeight = 150; // 150px minimum for preview
+    const minEditorHeight = 200; // 200px minimum for editor
+    const maxPreviewHeight = availableHeight - minEditorHeight;
 
-    // mouseYFromBottom represents the desired editor height
-    const newEditorHeight = Math.max(
-      minEditorHeight,
-      Math.min(maxEditorHeight, mouseYFromBottom)
+    // mouseYFromTop represents the desired preview height
+    const newPreviewHeight = Math.max(
+      minPreviewHeight,
+      Math.min(maxPreviewHeight, mouseYFromTop)
     );
-    const editorPercentage = (newEditorHeight / totalHeight) * 100;
+    const previewPercentage = (newPreviewHeight / totalHeight) * 100;
 
-    this.editorPanel.style.flex = `0 0 ${editorPercentage}%`;
+    // Use the stored preview panel reference
+    if (this.previewPanel) {
+      this.previewPanel.style.flex = `0 0 ${previewPercentage}%`;
+    }
   }
 
   private handleMouseUp(): void {
@@ -162,14 +195,34 @@ export class SplitterController {
   }
 
   private toggleEditorSize(): void {
-    const currentSize = this.getCurrentEditorSize();
+    if (this.isMobile) {
+      // Mobile: toggle preview size instead
+      this.togglePreviewSize();
+    } else {
+      // Desktop: toggle editor size
+      const currentSize = this.getCurrentEditorSize();
 
-    // If close to max size (within 5%), reset to default (50%)
-    if (currentSize >= this.maxEditorSize - 5) {
-      this.setEditorSize(this.defaultEditorSize);
+      // If close to max size (within 5%), reset to default (50%)
+      if (currentSize >= this.maxEditorSize - 5) {
+        this.setEditorSize(this.defaultEditorSize);
+      } else {
+        // Otherwise, maximize
+        this.setEditorSize(this.maxEditorSize);
+      }
+    }
+  }
+
+  private togglePreviewSize(): void {
+    const currentSize = this.getCurrentPreviewSize();
+    const defaultPreviewSize = 30; // 30% default for mobile
+    const maxPreviewSize = 70; // 70% max for mobile
+
+    // If close to max size (within 5%), reset to default
+    if (currentSize >= maxPreviewSize - 5) {
+      this.setPreviewSize(defaultPreviewSize);
     } else {
       // Otherwise, maximize
-      this.setEditorSize(this.maxEditorSize);
+      this.setPreviewSize(maxPreviewSize);
     }
   }
 
@@ -179,8 +232,18 @@ export class SplitterController {
     return match ? parseFloat(match[1]) : this.defaultEditorSize;
   }
 
+  private getCurrentPreviewSize(): number {
+    const flexValue = this.previewPanel.style.flex;
+    const match = flexValue.match(/0 0 (\d+(?:\.\d+)?)%/);
+    return match ? parseFloat(match[1]) : 30; // default 30%
+  }
+
   private setEditorSize(percentage: number): void {
     this.editorPanel.style.flex = `0 0 ${percentage}%`;
+  }
+
+  private setPreviewSize(percentage: number): void {
+    this.previewPanel.style.flex = `0 0 ${percentage}%`;
   }
 
   public destroy(): void {
