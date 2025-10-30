@@ -11,8 +11,10 @@ import { URLStateManager } from "./url-state";
 import type { EditorView } from "@codemirror/view";
 import './components/loading-overlay';
 import './components/fiddle-app';
+import './components/security-warning-modal';
 import type { LoadingOverlay } from './components/loading-overlay';
 import type { FiddleApp } from './components/fiddle-app';
+import { SecurityWarningModal } from './components/security-warning-modal';
 
 let editor: EditorView;
 let player: any;
@@ -162,8 +164,28 @@ async function init(): Promise<void> {
     // Hide loading screen
     await loading.hide();
 
-    // Run initial animation
-    await runAnimation(initialFrame);
+    // Check if code came from URL and if we should show security warning
+    const codeFromURL = initialCode !== null;
+    const shouldShowWarning = codeFromURL && !SecurityWarningModal.isWarningDisabled();
+
+    if (shouldShowWarning) {
+      // Show security warning and don't run animation until user saves
+      const warningModal = document.createElement('security-warning-modal') as SecurityWarningModal;
+      document.body.appendChild(warningModal);
+
+      // Listen for user acknowledgment but don't auto-run
+      const removeModal = () => {
+        if (document.body.contains(warningModal)) {
+          document.body.removeChild(warningModal);
+        }
+      };
+
+      warningModal.addEventListener('continue', removeModal);
+      warningModal.addEventListener('close', removeModal);
+    } else {
+      // Run initial animation only if code didn't come from URL or user has disabled warnings
+      await runAnimation(initialFrame);
+    }
   } catch (error) {
     console.error("Failed to initialize fiddle:", error);
     loading.updateProgress(

@@ -8,6 +8,7 @@ import {
   isHTMLSelectElement,
   validateNumberInput,
 } from "../utils/index.js";
+import { SecurityWarningModal } from "./security-warning-modal.js";
 
 @customElement("settings-modal")
 export class SettingsModal extends BaseModal {
@@ -22,6 +23,9 @@ export class SettingsModal extends BaseModal {
 
   @state()
   private background = "#1a1a1a";
+
+  @state()
+  private urlCodeWarningDisabled = false;
 
   static styles = [
     BaseModal.styles,
@@ -102,20 +106,22 @@ export class SettingsModal extends BaseModal {
       .clear-btn:hover {
         background: #444;
       }
-    `
+    `,
   ];
 
   connectedCallback() {
     super.connectedCallback();
-    this.title = 'Project Settings';
+    this.title = "Project Settings";
 
     const settings = URLStateManager.getInitialSettings();
     if (settings) {
       this.width = settings.width || 1920;
       this.height = settings.height || 1080;
       this.fps = settings.fps || 30;
-      this.background = settings.background || '#1a1a1a';
+      this.background = settings.background || "#1a1a1a";
     }
+
+    this.urlCodeWarningDisabled = SecurityWarningModal.isWarningDisabled();
   }
 
   protected renderBody(): TemplateResult {
@@ -175,6 +181,18 @@ export class SettingsModal extends BaseModal {
           </button>
         </div>
       </div>
+
+      <div class="settings-group">
+        <label>
+          <input
+            type="checkbox"
+            .checked=${this.urlCodeWarningDisabled}
+            @change=${this.handleWarningToggle}
+            style="width: auto; margin-right: 8px;"
+          />
+          Disable security warning for URL code loading
+        </label>
+      </div>
     `;
   }
 
@@ -215,6 +233,13 @@ export class SettingsModal extends BaseModal {
 
   private clearBackground = (): void => {
     this.background = "#1a1a1a";
+  };
+
+  private handleWarningToggle = (e: Event): void => {
+    if (isHTMLInputElement(e.target)) {
+      this.urlCodeWarningDisabled = e.target.checked;
+      SecurityWarningModal.setWarningDisabled(this.urlCodeWarningDisabled);
+    }
   };
 
   private handleApply = (): void => {
