@@ -81,7 +81,12 @@ async function init(): Promise<void> {
     editor = modules.createEditor(editorContainer, {
       onSave: async () => {
         const currentCode = modules.getEditorContent(editor);
-        URLStateManager.updateCode(currentCode);
+        // Only save to URL if code is not the default
+        if (currentCode === modules.DEFAULT_CODE) {
+          URLStateManager.clearCode();
+        } else {
+          URLStateManager.updateCode(currentCode);
+        }
         await runAnimation(player?.currentFrame);
       },
       initialCode,
@@ -124,7 +129,12 @@ async function init(): Promise<void> {
         player.updateProjectSettings(settings),
       onRunAnimation: async () => {
         const currentCode = modules.getEditorContent(editor);
-        URLStateManager.updateCode(currentCode);
+        // Only save to URL if code is not the default
+        if (currentCode === modules.DEFAULT_CODE) {
+          URLStateManager.clearCode();
+        } else {
+          URLStateManager.updateCode(currentCode);
+        }
         await runAnimation(player?.currentFrame);
       },
     };

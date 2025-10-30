@@ -26,9 +26,8 @@ import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { catppuccinMocha } from "@catppuccin/codemirror";
 import { autocomplete } from "./autocomplete";
 
-const DEFAULT_CODE = `import { makeScene2D } from '@motion-canvas/2d';
+export const DEFAULT_CODE = `import { makeScene2D, Circle, Rect } from '@motion-canvas/2d';
 import { waitFor, all, createRef } from '@motion-canvas/core';
-import { Circle, Rect } from '@motion-canvas/2d/lib/components';
 
 export default makeScene2D(function* (view) {
   const circle = createRef<Circle>();
@@ -73,7 +72,7 @@ export default makeScene2D(function* (view) {
     circle().scale(1.5, 1),
     rect().rotation(360, 1)
   );
-  
+
   yield* waitFor(1.0);
 
   yield* all(

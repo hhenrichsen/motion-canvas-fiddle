@@ -8,6 +8,7 @@ export interface LazyModules {
   createEditor: (container: HTMLElement, options: EditorOptions) => EditorView;
   resetEditorToDefault: (editor: EditorView) => void;
   getEditorContent: (editor: EditorView) => string;
+  DEFAULT_CODE: string;
   compileScene: (code: string) => Promise<any>;
   MotionCanvasPlayer: typeof MotionCanvasPlayer;
   UIController: typeof UIController;
@@ -72,6 +73,7 @@ export async function loadCoreModules(
     createEditor: editorModule.createEditor,
     resetEditorToDefault: editorModule.resetEditorToDefault,
     getEditorContent: editorModule.getEditorContent,
+    DEFAULT_CODE: editorModule.DEFAULT_CODE,
     compileScene: (code: string) =>
       compilerModule.compileScene(code, loadCanvasCommons),
     MotionCanvasPlayer: playerModule.MotionCanvasPlayer,
