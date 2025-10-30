@@ -166,6 +166,33 @@ export class FiddleApp extends LitElement {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      min-height: 56px;
+      box-sizing: border-box;
+    }
+
+    .run-btn {
+      background: var(--ctp-mocha-sky);
+      border: 1px solid var(--ctp-mocha-sky);
+      color: var(--ctp-mocha-base);
+      cursor: pointer;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .run-btn:hover {
+      opacity: 0.8;
+    }
+
+    .run-btn img {
+      width: 16px;
+      height: 16px;
+      /* Filter to convert black to ctp-mocha-base (#1e1e2e) */
+      filter: brightness(0) saturate(100%) invert(9%) sepia(9%) saturate(1562%) hue-rotate(202deg) brightness(97%) contrast(90%);
     }
 
     .panel-header.desktop-only {
@@ -398,8 +425,18 @@ export class FiddleApp extends LitElement {
         </div>
         <div class="split-view">
           <div class="editor-panel">
-            <div class="panel-header desktop-only">Editor</div>
-            <div class="panel-header mobile-only">Editor</div>
+            <div class="panel-header desktop-only">
+              <span>Editor</span>
+              <button class="run-btn" @click=${this.handleRunAnimation} title="Save and run animation (Ctrl+S)">
+                <img src="/save.svg" alt="Save & Run" />
+              </button>
+            </div>
+            <div class="panel-header mobile-only">
+              <span>Editor</span>
+              <button class="run-btn" @click=${this.handleRunAnimation} title="Save and run animation (Ctrl+S)">
+                <img src="/save.svg" alt="Save & Run" />
+              </button>
+            </div>
             <div id="editor"></div>
           </div>
           <div class="splitter" id="splitter"></div>
@@ -525,6 +562,10 @@ export class FiddleApp extends LitElement {
 
   private handleSeek(e: CustomEvent<number>) {
     this.callbacks?.onSeek(e.detail);
+  }
+
+  private handleRunAnimation() {
+    this.callbacks?.onRunAnimation();
   }
 
   private showSettingsModal() {
