@@ -223,7 +223,10 @@ async function executeCompiledCode(code: string): Promise<any> {
   const url = URL.createObjectURL(blob);
 
   try {
-    const module = await import(url);
+    const module = await import(
+      /* @vite-ignore */
+      url
+    );
     return module;
   } finally {
     URL.revokeObjectURL(url);
