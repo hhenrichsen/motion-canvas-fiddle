@@ -42,6 +42,9 @@ async function runAnimation(preserveFrame?: number): Promise<void> {
       info: (msg: string) => outputConsole.info(msg),
     } : undefined;
 
+    // Log compilation start
+    outputConsole?.info('Starting compilation...');
+
     // Show compilation progress
     const scene = await modules.compileScene(code, {
       forceWebContainer,
@@ -52,6 +55,9 @@ async function runAnimation(preserveFrame?: number): Promise<void> {
         outputConsole?.info(`${progress.message} (${progress.progress}%)`);
       },
     });
+
+    // Log successful compilation
+    outputConsole?.info('✓ Scene compiled successfully');
 
     await player.updateScene(scene);
 
@@ -68,6 +74,13 @@ async function runAnimation(preserveFrame?: number): Promise<void> {
   } catch (error: unknown) {
     console.error("Animation error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // Log error to console pane
+    const outputConsole = app.getConsole();
+    if (outputConsole) {
+      outputConsole.error(`Compilation failed: ${errorMessage}`);
+    }
+
     app.showError(errorMessage);
   }
 }
