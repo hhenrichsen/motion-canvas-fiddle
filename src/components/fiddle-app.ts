@@ -7,6 +7,7 @@ import "./player-controls";
 import "./settings-modal";
 import "./export-modal";
 import "./help-modal";
+import "./templates-modal";
 import "./docs-panel";
 import "./base-button";
 import "./output-console";
@@ -19,6 +20,7 @@ export interface AppCallbacks {
   onSeek: (frame: number) => void;
   onProjectSettingsChanged: (settings: ProjectSettings) => Promise<void>;
   onRunAnimation: () => Promise<void>;
+  onApplyTemplate: (code: string) => Promise<void>;
 }
 
 @customElement("fiddle-app")
@@ -52,6 +54,9 @@ export class FiddleApp extends LitElement {
 
   @state()
   private showHelp = false;
+
+  @state()
+  private showTemplates = false;
 
   @state()
   private showDocs = false;
@@ -177,7 +182,7 @@ export class FiddleApp extends LitElement {
     @media (max-width: 768px) {
       .controls base-button {
         min-width: 40px;
-        padding: 8px;
+        padding: 4px;
       }
 
       .button-icon {
@@ -534,7 +539,7 @@ export class FiddleApp extends LitElement {
       }
 
       .controls {
-        gap: 8px;
+        gap: 0;
       }
 
       .split-view {
@@ -669,6 +674,14 @@ export class FiddleApp extends LitElement {
                 alt="Docs"
               />
               <span class="button-text">Docs</span>
+            </base-button>
+            <base-button @click=${this.showTemplatesModal}>
+              <img
+                class="button-icon"
+                src="${import.meta.env.BASE_URL}file-eye.svg"
+                alt="Templates"
+              />
+              <span class="button-text">Templates</span>
             </base-button>
             <base-button @click=${this.handleResetCode}>
               <img
@@ -841,6 +854,14 @@ export class FiddleApp extends LitElement {
       ${this.showHelp
         ? html` <help-modal @close=${this.hideHelpModal}></help-modal> `
         : ""}
+      ${this.showTemplates
+        ? html`
+            <templates-modal
+              @close=${this.hideTemplatesModal}
+              @apply=${this.handleTemplateApply}
+            ></templates-modal>
+          `
+        : ""}
       ${this.showSettings
         ? html`
             <settings-modal
@@ -913,7 +934,10 @@ export class FiddleApp extends LitElement {
       if (!this.isResizingDocs) return;
 
       const deltaX = this.docsResizeStartX - e.clientX;
-      const newWidth = Math.max(300, Math.min(800, this.docsResizeStartWidth + deltaX));
+      const newWidth = Math.max(
+        300,
+        Math.min(800, this.docsResizeStartWidth + deltaX),
+      );
       this.docsPanelWidth = newWidth;
     };
 
@@ -1043,6 +1067,20 @@ export class FiddleApp extends LitElement {
 
   private hideHelpModal() {
     this.showHelp = false;
+  }
+
+  private showTemplatesModal() {
+    this.showTemplates = true;
+  }
+
+  private hideTemplatesModal() {
+    this.showTemplates = false;
+  }
+
+  private async handleTemplateApply(e: CustomEvent<string>) {
+    const code = e.detail;
+    await this.callbacks?.onApplyTemplate(code);
+    this.hideTemplatesModal();
   }
 
   private toggleDocs() {
