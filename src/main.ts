@@ -9,12 +9,12 @@ import "@catppuccin/palette/css/catppuccin.css";
 import { loadCoreModules, type LazyModules } from "./lazy-imports";
 import { URLStateManager } from "./url-state";
 import type { EditorView } from "@codemirror/view";
-import './components/loading-overlay';
-import './components/fiddle-app';
-import './components/security-warning-modal';
-import type { LoadingOverlay } from './components/loading-overlay';
-import type { FiddleApp } from './components/fiddle-app';
-import { SecurityWarningModal } from './components/security-warning-modal';
+import "./components/loading-overlay";
+import "./components/fiddle-app";
+import "./components/security-warning-modal";
+import type { LoadingOverlay } from "./components/loading-overlay";
+import type { FiddleApp } from "./components/fiddle-app";
+import { SecurityWarningModal } from "./components/security-warning-modal";
 
 let editor: EditorView;
 let player: any;
@@ -29,21 +29,23 @@ async function runAnimation(preserveFrame?: number): Promise<void> {
     const code = modules.getEditorContent(editor);
 
     // Get compilation mode from settings
-    const compilationMode = localStorage.getItem('compilationMode') || 'auto';
-    const forceWebContainer = compilationMode === 'webcontainer';
-    const forceBabel = compilationMode === 'babel';
+    const compilationMode = localStorage.getItem("compilationMode") || "auto";
+    const forceWebContainer = compilationMode === "webcontainer";
+    const forceBabel = compilationMode === "babel";
 
     // Create logger that writes to the console component
     const outputConsole = app.getConsole();
-    const logger = outputConsole ? {
-      log: (msg: string) => outputConsole.log(msg),
-      error: (msg: string) => outputConsole.error(msg),
-      warn: (msg: string) => outputConsole.warn(msg),
-      info: (msg: string) => outputConsole.info(msg),
-    } : undefined;
+    const logger = outputConsole
+      ? {
+          log: (msg: string) => outputConsole.log(msg),
+          error: (msg: string) => outputConsole.error(msg),
+          warn: (msg: string) => outputConsole.warn(msg),
+          info: (msg: string) => outputConsole.info(msg),
+        }
+      : undefined;
 
     // Log compilation start
-    outputConsole?.info('Starting compilation...');
+    outputConsole?.info("Starting compilation...");
 
     // Show compilation progress
     const scene = await modules.compileScene(code, {
@@ -51,13 +53,15 @@ async function runAnimation(preserveFrame?: number): Promise<void> {
       forceBabel,
       logger,
       onProgress: (progress) => {
-        console.log(`[${progress.stage}] ${progress.message} (${progress.progress}%)`);
+        console.log(
+          `[${progress.stage}] ${progress.message} (${progress.progress}%)`
+        );
         outputConsole?.info(`${progress.message} (${progress.progress}%)`);
       },
     });
 
     // Log successful compilation
-    outputConsole?.info('✓ Scene compiled successfully');
+    outputConsole?.info("✓ Scene compiled successfully");
 
     await player.updateScene(scene);
 
@@ -87,7 +91,7 @@ async function runAnimation(preserveFrame?: number): Promise<void> {
 
 async function init(): Promise<void> {
   // Create and add loading overlay
-  const loading = document.createElement('loading-overlay') as LoadingOverlay;
+  const loading = document.createElement("loading-overlay") as LoadingOverlay;
   document.body.appendChild(loading);
 
   try {
@@ -97,7 +101,7 @@ async function init(): Promise<void> {
     });
 
     // Create and add the main app component
-    app = document.createElement('fiddle-app') as FiddleApp;
+    app = document.createElement("fiddle-app") as FiddleApp;
     document.body.appendChild(app);
 
     // Wait for app to be ready
@@ -118,12 +122,17 @@ async function init(): Promise<void> {
 
     editor = modules.createEditor(editorContainer, {
       onSave: async () => {
-        const currentCode = modules.getEditorContent(editor);
+        // Format the code and update the editor (if formatting is enabled)
+        const formattedCode = await modules.formatAndUpdateEditor(
+          editor,
+          app.isFormattingEnabled(),
+        );
+
         // Only save to URL if code is not the default
-        if (currentCode === modules.DEFAULT_CODE) {
+        if (formattedCode === modules.DEFAULT_CODE) {
           URLStateManager.clearCode();
         } else {
-          URLStateManager.updateCode(currentCode);
+          URLStateManager.updateCode(formattedCode);
         }
         await runAnimation(player?.currentFrame);
       },
@@ -166,12 +175,17 @@ async function init(): Promise<void> {
       onProjectSettingsChanged: (settings: any) =>
         player.updateProjectSettings(settings),
       onRunAnimation: async () => {
-        const currentCode = modules.getEditorContent(editor);
+        // Format the code and update the editor (if formatting is enabled)
+        const formattedCode = await modules.formatAndUpdateEditor(
+          editor,
+          app.isFormattingEnabled(),
+        );
+
         // Only save to URL if code is not the default
-        if (currentCode === modules.DEFAULT_CODE) {
+        if (formattedCode === modules.DEFAULT_CODE) {
           URLStateManager.clearCode();
         } else {
-          URLStateManager.updateCode(currentCode);
+          URLStateManager.updateCode(formattedCode);
         }
         await runAnimation(player?.currentFrame);
       },
@@ -182,10 +196,12 @@ async function init(): Promise<void> {
       width: 1920,
       height: 1080,
       fps: 30,
-      background: '#1a1a1a'
+      background: "#1a1a1a",
     };
 
-    const settings = initialSettings ? { ...defaultSettings, ...initialSettings } : defaultSettings;
+    const settings = initialSettings
+      ? { ...defaultSettings, ...initialSettings }
+      : defaultSettings;
     await player.initialize(settings);
 
     // Explicitly apply project settings to ensure canvas background is set
@@ -196,7 +212,7 @@ async function init(): Promise<void> {
 
     // Initialize splitter for both desktop and mobile
     // Wait for next frame to ensure DOM is rendered
-    await new Promise(resolve => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
     splitter = new modules.SplitterController(app.shadowRoot);
 
     // Handle window resize to update splitter mode
@@ -212,13 +228,19 @@ async function init(): Promise<void> {
     // Hide loading screen
     await loading.hide();
 
+    // Preload Prettier in the background for formatting
+    modules.preloadFormatter();
+
     // Check if code came from URL and if we should show security warning
     const codeFromURL = initialCode !== null;
-    const shouldShowWarning = codeFromURL && !SecurityWarningModal.isWarningDisabled();
+    const shouldShowWarning =
+      codeFromURL && !SecurityWarningModal.isWarningDisabled();
 
     if (shouldShowWarning) {
       // Show security warning and don't run animation until user saves
-      const warningModal = document.createElement('security-warning-modal') as SecurityWarningModal;
+      const warningModal = document.createElement(
+        "security-warning-modal"
+      ) as SecurityWarningModal;
       document.body.appendChild(warningModal);
 
       // Listen for user acknowledgment but don't auto-run
@@ -228,8 +250,8 @@ async function init(): Promise<void> {
         }
       };
 
-      warningModal.addEventListener('continue', removeModal);
-      warningModal.addEventListener('close', removeModal);
+      warningModal.addEventListener("continue", removeModal);
+      warningModal.addEventListener("close", removeModal);
     } else {
       // Run initial animation only if code didn't come from URL or user has disabled warnings
       await runAnimation(initialFrame);

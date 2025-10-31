@@ -9,6 +9,11 @@ export interface LazyModules {
   createEditor: (container: HTMLElement, options: EditorOptions) => EditorView;
   resetEditorToDefault: (editor: EditorView) => void;
   getEditorContent: (editor: EditorView) => string;
+  formatAndUpdateEditor: (
+    editor: EditorView,
+    shouldFormat?: boolean,
+  ) => Promise<string>;
+  preloadFormatter: () => void;
   DEFAULT_CODE: string;
   compileScene: (code: string, options?: CompileOptions) => Promise<unknown>;
   MotionCanvasPlayer: typeof MotionCanvasPlayer;
@@ -74,6 +79,9 @@ export async function loadCoreModules(
     createEditor: editorModule.createEditor,
     resetEditorToDefault: editorModule.resetEditorToDefault,
     getEditorContent: editorModule.getEditorContent,
+    formatAndUpdateEditor: (editor: EditorView, shouldFormat?: boolean) =>
+      editorModule.formatAndUpdateEditor(editor, shouldFormat),
+    preloadFormatter: editorModule.preloadFormatter,
     DEFAULT_CODE: editorModule.DEFAULT_CODE,
     compileScene: (code: string, options?: CompileOptions) =>
       compilerModule.compileScene(code, {
@@ -91,7 +99,7 @@ export async function loadCoreModules(
   updateProgress(95, "Setting up global modules...");
 
   // Import JSX runtime for proper JSX handling
-  const jsxRuntime = await import('@motion-canvas/2d/lib/jsx-runtime');
+  const jsxRuntime = await import("@motion-canvas/2d/lib/jsx-runtime");
 
   // Set up global modules for user code access
   (window as any).CanvasCore = MotionCanvasCore;

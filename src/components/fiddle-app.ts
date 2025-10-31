@@ -57,6 +57,9 @@ export class FiddleApp extends LitElement {
   @state()
   private consoleMessageCount = 0;
 
+  @state()
+  private formattingEnabled = true;
+
   @query("#editor")
   editorContainer!: HTMLDivElement;
 
@@ -195,7 +198,7 @@ export class FiddleApp extends LitElement {
       display: flex;
     }
 
-    .console-toggle-btn {
+    .editor-action-btn {
       background: transparent;
       border: 1px solid var(--ctp-mocha-surface2);
       color: var(--ctp-mocha-text);
@@ -206,17 +209,33 @@ export class FiddleApp extends LitElement {
       display: flex;
       align-items: center;
       gap: 6px;
+      height: 32px;
+      box-sizing: border-box;
     }
 
-    .console-toggle-btn:hover {
+    .editor-action-btn:hover {
       background: var(--ctp-mocha-surface0);
       border-color: var(--ctp-mocha-sky);
     }
 
-    .console-toggle-btn.active {
+    .editor-action-btn.active {
       background: var(--ctp-mocha-sky);
       color: var(--ctp-mocha-base);
       border-color: var(--ctp-mocha-sky);
+    }
+
+    .editor-action-btn img {
+      width: 14px;
+      height: 14px;
+      /* Filter to convert black to ctp-mocha-text (#cdd6f4) */
+      filter: brightness(0) saturate(100%) invert(93%) sepia(8%) saturate(661%)
+        hue-rotate(192deg) brightness(101%) contrast(93%);
+    }
+
+    .editor-action-btn.active img {
+      /* Filter to convert black to ctp-mocha-base (#1e1e2e) */
+      filter: brightness(0) saturate(100%) invert(9%) sepia(9%) saturate(1562%)
+        hue-rotate(202deg) brightness(97%) contrast(90%);
     }
 
     .console-badge {
@@ -230,9 +249,15 @@ export class FiddleApp extends LitElement {
       text-align: center;
     }
 
-    .console-toggle-btn.active .console-badge {
+    .editor-action-btn.active .console-badge {
       background: var(--ctp-mocha-base);
       color: var(--ctp-mocha-sky);
+    }
+
+    .editor-action-btn.icon-only {
+      padding: 6px 8px;
+      min-width: 32px;
+      justify-content: center;
     }
 
     .preview-panel {
@@ -266,6 +291,8 @@ export class FiddleApp extends LitElement {
       font-size: 13px;
       font-weight: 500;
       transition: opacity 0.2s;
+      height: 32px;
+      box-sizing: border-box;
     }
 
     .run-btn:hover {
@@ -273,10 +300,11 @@ export class FiddleApp extends LitElement {
     }
 
     .run-btn img {
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       /* Filter to convert black to ctp-mocha-base (#1e1e2e) */
-      filter: brightness(0) saturate(100%) invert(9%) sepia(9%) saturate(1562%) hue-rotate(202deg) brightness(97%) contrast(90%);
+      filter: brightness(0) saturate(100%) invert(9%) sepia(9%) saturate(1562%)
+        hue-rotate(202deg) brightness(97%) contrast(90%);
     }
 
     .panel-header.desktop-only {
@@ -511,9 +539,9 @@ export class FiddleApp extends LitElement {
           <div class="editor-panel">
             <div class="panel-header desktop-only">
               <span>Editor</span>
-              <div style="display: flex; gap: 8px;">
+              <div style="display: flex; gap: 8px; align-items: center;">
                 <button
-                  class="console-toggle-btn ${this.showConsole ? 'active' : ''}"
+                  class="editor-action-btn ${this.showConsole ? 'active' : ''}"
                   @click=${this.toggleConsole}
                   title="Toggle console output"
                 >
@@ -521,6 +549,13 @@ export class FiddleApp extends LitElement {
                   ${this.consoleMessageCount > 0
                     ? html`<span class="console-badge">${this.consoleMessageCount}</span>`
                     : ''}
+                </button>
+                <button
+                  class="editor-action-btn icon-only ${this.formattingEnabled ? 'active' : ''}"
+                  @click=${this.toggleFormatting}
+                  title="Toggle code formatting on save"
+                >
+                  <img src="${import.meta.env.BASE_URL}broom.svg" alt="Format" />
                 </button>
                 <button class="run-btn" @click=${this.handleRunAnimation} title="Save and run animation (Ctrl+S)">
                   <img src="${import.meta.env.BASE_URL}save.svg" alt="Save & Run" />
@@ -529,9 +564,9 @@ export class FiddleApp extends LitElement {
             </div>
             <div class="panel-header mobile-only">
               <span>Editor</span>
-              <div style="display: flex; gap: 8px;">
+              <div style="display: flex; gap: 8px; align-items: center;">
                 <button
-                  class="console-toggle-btn ${this.showConsole ? 'active' : ''}"
+                  class="editor-action-btn ${this.showConsole ? 'active' : ''}"
                   @click=${this.toggleConsole}
                   title="Toggle console output"
                 >
@@ -539,6 +574,13 @@ export class FiddleApp extends LitElement {
                   ${this.consoleMessageCount > 0
                     ? html`<span class="console-badge">${this.consoleMessageCount}</span>`
                     : ''}
+                </button>
+                <button
+                  class="editor-action-btn icon-only ${this.formattingEnabled ? 'active' : ''}"
+                  @click=${this.toggleFormatting}
+                  title="Toggle code formatting on save"
+                >
+                  <img src="${import.meta.env.BASE_URL}broom.svg" alt="Format" />
                 </button>
                 <button class="run-btn" @click=${this.handleRunAnimation} title="Save and run animation (Ctrl+S)">
                   <img src="${import.meta.env.BASE_URL}save.svg" alt="Save & Run" />
@@ -630,6 +672,12 @@ export class FiddleApp extends LitElement {
       });
     }
 
+    // Load formatting preference from localStorage
+    const savedFormattingPref = localStorage.getItem('formattingEnabled');
+    if (savedFormattingPref !== null) {
+      this.formattingEnabled = savedFormattingPref === 'true';
+    }
+
     // Setup keyboard shortcuts
     document.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
@@ -670,6 +718,15 @@ export class FiddleApp extends LitElement {
   private toggleConsole = (): void => {
     this.showConsole = !this.showConsole;
   };
+
+  private toggleFormatting = (): void => {
+    this.formattingEnabled = !this.formattingEnabled;
+    localStorage.setItem('formattingEnabled', String(this.formattingEnabled));
+  };
+
+  public isFormattingEnabled(): boolean {
+    return this.formattingEnabled;
+  }
 
   private handleMessageCount = (e: CustomEvent<number>): void => {
     this.consoleMessageCount = e.detail;

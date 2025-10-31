@@ -25,6 +25,7 @@ import {
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { catppuccinMocha } from "@catppuccin/codemirror";
 import { autocomplete } from "./autocomplete";
+import { formatCode, preloadPrettier } from "./formatter";
 
 export const DEFAULT_CODE = `import { makeScene2D, Circle, Rect } from '@motion-canvas/2d';
 import { waitFor, all, createRef } from '@motion-canvas/core';
@@ -165,4 +166,39 @@ export function resetEditorToDefault(editor: EditorView): void {
 
 export function getEditorContent(editor: EditorView): string {
   return editor.state.doc.toString();
+}
+
+export function setEditorContent(editor: EditorView, content: string): void {
+  editor.dispatch({
+    changes: {
+      from: 0,
+      to: editor.state.doc.length,
+      insert: content,
+    },
+  });
+}
+
+export async function formatAndUpdateEditor(
+  editor: EditorView,
+  shouldFormat: boolean = true,
+): Promise<string> {
+  const currentCode = getEditorContent(editor);
+
+  // Skip formatting if disabled
+  if (!shouldFormat) {
+    return currentCode;
+  }
+
+  const formattedCode = await formatCode(currentCode);
+
+  // Only update the editor if the code actually changed
+  if (formattedCode !== currentCode) {
+    setEditorContent(editor, formattedCode);
+  }
+
+  return formattedCode;
+}
+
+export function preloadFormatter(): void {
+  preloadPrettier();
 }
