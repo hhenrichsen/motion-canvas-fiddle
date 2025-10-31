@@ -1,6 +1,14 @@
-import { detectFeatures, isWebContainerAvailable, explainFeatures } from './feature-detector';
-import { compileWithWebContainer, type CompilationProgress, type Logger } from './webcontainer-compiler';
-import { canUseWebContainer } from './offline';
+import {
+  detectFeatures,
+  isWebContainerAvailable,
+  explainFeatures,
+} from "./feature-detector";
+import {
+  compileWithWebContainer,
+  type CompilationProgress,
+  type Logger,
+} from "./webcontainer-compiler";
+import { canUseWebContainer } from "./offline";
 
 interface CompilationContext {
   hasCanvasCommons: boolean;
@@ -26,24 +34,27 @@ export interface CompileOptions {
 
 export async function compileScene(
   code: string,
-  options?: CompileOptions | (() => Promise<unknown>)
+  options?: CompileOptions | (() => Promise<unknown>),
 ): Promise<unknown> {
   // Handle legacy API (loadCanvasCommons function as second parameter)
-  const opts: CompileOptions = typeof options === 'function'
-    ? { loadCanvasCommons: options }
-    : options || {};
+  const opts: CompileOptions =
+    typeof options === "function"
+      ? { loadCanvasCommons: options }
+      : options || {};
 
   // Detect features that might require WebContainer
   const features = detectFeatures(code);
 
-  console.log('[Compiler] Feature detection:', features);
-  console.log('[Compiler]', explainFeatures(features));
+  console.log("[Compiler] Feature detection:", features);
+  console.log("[Compiler]", explainFeatures(features));
 
   // Check if we're offline - force Babel if so
   const online = canUseWebContainer();
   if (!online && (opts.forceWebContainer || features.needsWebContainer)) {
-    console.log('[Compiler] Offline mode detected - using Babel compilation (WebContainer disabled)');
-    opts.logger?.warn('[Compiler] Offline mode - WebContainer disabled');
+    console.log(
+      "[Compiler] Offline mode detected - using Babel compilation (WebContainer disabled)",
+    );
+    opts.logger?.warn("[Compiler] Offline mode - WebContainer disabled");
   }
 
   // Determine compilation strategy
@@ -54,31 +65,55 @@ export async function compileScene(
     isWebContainerAvailable();
 
   if (shouldUseWebContainer) {
-    console.log('[Compiler] Using WebContainer (Vite) compilation');
-    opts.logger?.info('[Compiler] Using WebContainer (Vite) compilation');
+    console.log("[Compiler] Using WebContainer (Vite) compilation");
+    opts.logger?.info("[Compiler] Using WebContainer (Vite) compilation");
     try {
       // Load canvas-commons if needed
-      if (features.externalPackages.includes('@hhenrichsen/canvas-commons') && opts.loadCanvasCommons) {
+      if (
+        features.externalPackages.includes("@hhenrichsen/canvas-commons") &&
+        opts.loadCanvasCommons
+      ) {
         await opts.loadCanvasCommons();
       }
 
-      return await compileWithWebContainer(code, features, opts.onProgress, opts.logger);
+      return await compileWithWebContainer(
+        code,
+        features,
+        opts.onProgress,
+        opts.logger,
+      );
     } catch (error) {
-      console.error('[Compiler] WebContainer compilation failed:', error);
+      console.error("[Compiler] WebContainer compilation failed:", error);
 
       // Fall back to Babel if WebContainer fails (unless forced)
       if (opts.forceWebContainer) {
         throw error;
       }
 
-      console.warn('[Compiler] Falling back to Babel compilation');
-      opts.logger?.warn('[Compiler] Falling back to Babel compilation');
-      return await compileWithBabel(code, opts.loadCanvasCommons, opts.loadMotionCanvasGraphing, opts.loadThree, opts.loadShiki, opts.loadShikiHighlighter, opts.loadLezer);
+      console.warn("[Compiler] Falling back to Babel compilation");
+      opts.logger?.warn("[Compiler] Falling back to Babel compilation");
+      return await compileWithBabel(
+        code,
+        opts.loadCanvasCommons,
+        opts.loadMotionCanvasGraphing,
+        opts.loadThree,
+        opts.loadShiki,
+        opts.loadShikiHighlighter,
+        opts.loadLezer,
+      );
     }
   } else {
-    console.log('[Compiler] Using Babel compilation');
-    opts.logger?.info('[Compiler] Using Babel compilation');
-    return await compileWithBabel(code, opts.loadCanvasCommons, opts.loadMotionCanvasGraphing, opts.loadThree, opts.loadShiki, opts.loadShikiHighlighter, opts.loadLezer);
+    console.log("[Compiler] Using Babel compilation");
+    opts.logger?.info("[Compiler] Using Babel compilation");
+    return await compileWithBabel(
+      code,
+      opts.loadCanvasCommons,
+      opts.loadMotionCanvasGraphing,
+      opts.loadThree,
+      opts.loadShiki,
+      opts.loadShikiHighlighter,
+      opts.loadLezer,
+    );
   }
 }
 
@@ -89,7 +124,7 @@ async function compileWithBabel(
   loadThree?: () => Promise<unknown>,
   loadShiki?: () => Promise<unknown>,
   loadShikiHighlighter?: () => Promise<unknown>,
-  loadLezer?: () => Promise<unknown>
+  loadLezer?: () => Promise<unknown>,
 ): Promise<unknown> {
   try {
     const Babel = await import("@babel/standalone");
@@ -166,7 +201,9 @@ async function compileWithBabel(
                   context.hasCanvasCommons = true;
                   path.node.source.value = "@hhenrichsen/canvas-commons";
                 }
-                if (sourceValue.startsWith("@spidunno/motion-canvas-graphing")) {
+                if (
+                  sourceValue.startsWith("@spidunno/motion-canvas-graphing")
+                ) {
                   context.hasMotionCanvasGraphing = true;
                   path.node.source.value = "@spidunno/motion-canvas-graphing";
                 }
@@ -174,7 +211,10 @@ async function compileWithBabel(
                   context.hasThree = true;
                   path.node.source.value = "three";
                 }
-                if (sourceValue.startsWith("shiki") && !sourceValue.startsWith("./shiki")) {
+                if (
+                  sourceValue.startsWith("shiki") &&
+                  !sourceValue.startsWith("./shiki")
+                ) {
                   context.hasShiki = true;
                   path.node.source.value = "shiki";
                 }
@@ -215,7 +255,7 @@ async function compileWithBabel(
       result = { code: transformResult.code };
     } catch (error: any) {
       const match = /(.*) \(\d+:\d+\)/.exec(
-        error.message.slice(filename.length + 1)
+        error.message.slice(filename.length + 1),
       );
       errorMessage = match ? match[1] : error.message;
       if (error.loc) {
@@ -231,8 +271,8 @@ async function compileWithBabel(
       throw new Error(
         errorMessage ??
           `Cannot find names: ${Array.from(undeclaredVariables).join(
-            ", "
-          )}\nDid you forget to import them?`
+            ", ",
+          )}\nDid you forget to import them?`,
       );
     }
 
@@ -289,7 +329,7 @@ function replaceImportsWithGlobals(code: string): string {
         }
       });
       return importItems.join("\n");
-    }
+    },
   );
 
   finalCode = finalCode.replace(
@@ -305,7 +345,7 @@ function replaceImportsWithGlobals(code: string): string {
         }
       });
       return importItems.join("\n");
-    }
+    },
   );
 
   finalCode = finalCode.replace(
@@ -313,7 +353,7 @@ function replaceImportsWithGlobals(code: string): string {
     (_match, importName, packageName) => {
       const moduleName = packageName === "core" ? "CanvasCore" : "Canvas2D";
       return `const ${importName} = window.${moduleName}.${importName};`;
-    }
+    },
   );
 
   // Handle canvas-commons imports
@@ -330,14 +370,14 @@ function replaceImportsWithGlobals(code: string): string {
         }
       });
       return importItems.join("\n");
-    }
+    },
   );
 
   finalCode = finalCode.replace(
     /import\s+(\w+)\s*from\s*['"]@hhenrichsen\/canvas-commons['"]/g,
     (_match, importName) => {
       return `const ${importName} = window.CanvasCommons.${importName};`;
-    }
+    },
   );
 
   // Handle motion-canvas-graphing imports
@@ -354,14 +394,14 @@ function replaceImportsWithGlobals(code: string): string {
         }
       });
       return importItems.join("\n");
-    }
+    },
   );
 
   finalCode = finalCode.replace(
     /import\s+(\w+)\s*from\s*['"]@spidunno\/motion-canvas-graphing['"]/g,
     (_match, importName) => {
       return `const ${importName} = window.MotionCanvasGraphing.${importName};`;
-    }
+    },
   );
 
   // Handle three.js imports
@@ -378,14 +418,14 @@ function replaceImportsWithGlobals(code: string): string {
         }
       });
       return importItems.join("\n");
-    }
+    },
   );
 
   finalCode = finalCode.replace(
     /import\s+\*\s+as\s+(\w+)\s*from\s*['"]three['"]/g,
     (_match, importName) => {
       return `const ${importName} = window.THREE;`;
-    }
+    },
   );
 
   // Handle shiki imports
@@ -402,14 +442,14 @@ function replaceImportsWithGlobals(code: string): string {
         }
       });
       return importItems.join("\n");
-    }
+    },
   );
 
   finalCode = finalCode.replace(
     /import\s+\*\s+as\s+(\w+)\s*from\s*['"]shiki['"]/g,
     (_match, importName) => {
       return `const ${importName} = window.Shiki;`;
-    }
+    },
   );
 
   // Handle lezer imports
@@ -426,7 +466,7 @@ function replaceImportsWithGlobals(code: string): string {
         }
       });
       return importItems.join("\n");
-    }
+    },
   );
 
   finalCode = finalCode.replace(
@@ -442,7 +482,7 @@ function replaceImportsWithGlobals(code: string): string {
         }
       });
       return importItems.join("\n");
-    }
+    },
   );
 
   finalCode = finalCode.replace(
@@ -458,37 +498,39 @@ function replaceImportsWithGlobals(code: string): string {
         }
       });
       return importItems.join("\n");
-    }
+    },
   );
 
   // Handle lezer language parsers
   const lezerParsers = [
-    { pkg: 'cpp', window: 'LezerCpp' },
-    { pkg: 'css', window: 'LezerCss' },
-    { pkg: 'go', window: 'LezerGo' },
-    { pkg: 'html', window: 'LezerHtml' },
-    { pkg: 'java', window: 'LezerJava' },
-    { pkg: 'javascript', window: 'LezerJavascript' },
-    { pkg: 'json', window: 'LezerJson' },
-    { pkg: 'markdown', window: 'LezerMarkdown' },
-    { pkg: 'php', window: 'LezerPhp' },
-    { pkg: 'python', window: 'LezerPython' },
-    { pkg: 'rust', window: 'LezerRust' },
-    { pkg: 'sass', window: 'LezerSass' },
-    { pkg: 'xml', window: 'LezerXml' },
-    { pkg: 'yaml', window: 'LezerYaml' },
+    { pkg: "cpp", window: "LezerCpp" },
+    { pkg: "css", window: "LezerCss" },
+    { pkg: "go", window: "LezerGo" },
+    { pkg: "html", window: "LezerHtml" },
+    { pkg: "java", window: "LezerJava" },
+    { pkg: "javascript", window: "LezerJavascript" },
+    { pkg: "json", window: "LezerJson" },
+    { pkg: "markdown", window: "LezerMarkdown" },
+    { pkg: "php", window: "LezerPhp" },
+    { pkg: "python", window: "LezerPython" },
+    { pkg: "rust", window: "LezerRust" },
+    { pkg: "sass", window: "LezerSass" },
+    { pkg: "xml", window: "LezerXml" },
+    { pkg: "yaml", window: "LezerYaml" },
   ];
 
   for (const { pkg, window: windowVar } of lezerParsers) {
     const pattern = new RegExp(
       `import\\s*{\\s*([^}]+)\\s*}\\s*from\\s*['"]@lezer/${pkg}['"]`,
-      'g'
+      "g",
     );
     finalCode = finalCode.replace(pattern, (_match, imports) => {
       const importItems = imports.split(",").map((item: string) => {
         const trimmed = item.trim();
         if (trimmed.includes(" as ")) {
-          const [original, alias] = trimmed.split(" as ").map((s: string) => s.trim());
+          const [original, alias] = trimmed
+            .split(" as ")
+            .map((s: string) => s.trim());
           return `const ${alias} = window.${windowVar}.${original};`;
         } else {
           return `const ${trimmed} = window.${windowVar}.${trimmed};`;
@@ -512,20 +554,22 @@ function replaceImportsWithGlobals(code: string): string {
         }
       });
       return importItems.join("\n");
-    }
+    },
   );
 
   finalCode = finalCode.replace(
     /import\s+(\w+)\s*from\s*['"]\.\/shiki['"]/g,
     (_match, importName) => {
       return `const ${importName} = window.${importName};`;
-    }
+    },
   );
 
   return finalCode;
 }
 
-async function executeCompiledCode(code: string): Promise<{ default: unknown }> {
+async function executeCompiledCode(
+  code: string,
+): Promise<{ default: unknown }> {
   const blob = new Blob([code], { type: "application/javascript" });
   const url = URL.createObjectURL(blob);
 

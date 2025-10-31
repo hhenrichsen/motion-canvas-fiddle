@@ -92,7 +92,7 @@ export interface EditorOptions extends EditorCallbacks {
 
 export function createEditor(
   container: HTMLElement,
-  options: EditorOptions
+  options: EditorOptions,
 ): EditorView {
   const extensions: Extension[] = [
     lineNumbers(),

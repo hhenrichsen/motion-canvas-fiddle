@@ -35,17 +35,19 @@ export function getOfflineStatus(): OfflineStatus {
 /**
  * Listen for online/offline status changes
  */
-export function onOfflineStatusChange(callback: (status: OfflineStatus) => void): () => void {
+export function onOfflineStatusChange(
+  callback: (status: OfflineStatus) => void,
+): () => void {
   const handler = () => {
     callback(getOfflineStatus());
   };
 
-  window.addEventListener('online', handler);
-  window.addEventListener('offline', handler);
+  window.addEventListener("online", handler);
+  window.addEventListener("offline", handler);
 
   // Return cleanup function
   return () => {
-    window.removeEventListener('online', handler);
-    window.removeEventListener('offline', handler);
+    window.removeEventListener("online", handler);
+    window.removeEventListener("offline", handler);
   };
 }

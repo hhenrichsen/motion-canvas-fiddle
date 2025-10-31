@@ -190,7 +190,7 @@ export class LoadingController {
               }%"></div>
             </div>
             <span class="loading-percentage">${Math.round(
-              this.state.progress
+              this.state.progress,
             )}%</span>
           </div>
         </div>
@@ -311,7 +311,7 @@ export class LoadingController {
 
     const messageEl = this.container.querySelector(".loading-message");
     const progressFill = this.container.querySelector(
-      ".loading-progress-fill"
+      ".loading-progress-fill",
     ) as HTMLElement;
     const percentage = this.container.querySelector(".loading-percentage");
 

@@ -62,7 +62,7 @@ async function runAnimation(preserveFrame?: number): Promise<void> {
       loadLezer: modules.loadLezer,
       onProgress: (progress) => {
         console.log(
-          `[${progress.stage}] ${progress.message} (${progress.progress}%)`
+          `[${progress.stage}] ${progress.message} (${progress.progress}%)`,
         );
         outputConsole?.info(`${progress.message} (${progress.progress}%)`);
       },
@@ -231,6 +231,25 @@ async function init(): Promise<void> {
         }
         await runAnimation(player?.currentFrame);
       },
+      onApplyTemplate: async (code: string) => {
+        // Set the editor content to the template code
+        editor.dispatch({
+          changes: {
+            from: 0,
+            to: editor.state.doc.length,
+            insert: code,
+          },
+        });
+        // Format the code and update the editor (if formatting is enabled)
+        const formattedCode = await modules.formatAndUpdateEditor(
+          editor,
+          app.isFormattingEnabled(),
+        );
+        // Update URL with template code
+        URLStateManager.updateCode(formattedCode);
+        // Run the animation with the new template
+        await runAnimation(player?.currentFrame);
+      },
     };
 
     // Ensure we have default settings for first load
@@ -277,14 +296,15 @@ async function init(): Promise<void> {
     schedulePrefetch(modules);
 
     // Check if code came from URL and if we should show security warning
-    const codeFromURL = initialCode !== null || gistId !== null || srcUrl !== null;
+    const codeFromURL =
+      initialCode !== null || gistId !== null || srcUrl !== null;
     const shouldShowWarning =
       codeFromURL && !SecurityWarningModal.isWarningDisabled();
 
     if (shouldShowWarning) {
       // Show security warning and don't run animation until user saves
       const warningModal = document.createElement(
-        "security-warning-modal"
+        "security-warning-modal",
       ) as SecurityWarningModal;
       document.body.appendChild(warningModal);
 
@@ -305,7 +325,7 @@ async function init(): Promise<void> {
     console.error("Failed to initialize fiddle:", error);
     loading.updateProgress(
       0,
-      `Error: ${error instanceof Error ? error.message : String(error)}`
+      `Error: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }

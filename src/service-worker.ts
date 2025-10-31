@@ -13,8 +13,8 @@
 export type {}; // Make this a module
 declare const globalThis: ServiceWorkerGlobalScope;
 
-const VERSION = '1.0.0';
-const CACHE_PREFIX = 'mc-fiddle';
+const VERSION = "1.0.0";
+const CACHE_PREFIX = "mc-fiddle";
 
 const CACHES = {
   static: `${CACHE_PREFIX}-static-${VERSION}`,
@@ -24,14 +24,14 @@ const CACHES = {
 } as const;
 
 // Resources to cache on install
-const PRECACHE_URLS = ['./', './index.html'];
+const PRECACHE_URLS = ["./", "./index.html"];
 
 // ============================================================================
 // INSTALL
 // ============================================================================
 
-globalThis.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker version', VERSION);
+globalThis.addEventListener("install", (event) => {
+  console.log("[SW] Installing service worker version", VERSION);
 
   event.waitUntil(
     (async () => {
@@ -42,8 +42,8 @@ globalThis.addEventListener('install', (event) => {
       const cache = await caches.open(CACHES.static);
       await cache.addAll(PRECACHE_URLS);
 
-      console.log('[SW] Precached essential resources');
-    })()
+      console.log("[SW] Precached essential resources");
+    })(),
   );
 });
 
@@ -51,8 +51,8 @@ globalThis.addEventListener('install', (event) => {
 // ACTIVATE
 // ============================================================================
 
-globalThis.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker version', VERSION);
+globalThis.addEventListener("activate", (event) => {
+  console.log("[SW] Activating service worker version", VERSION);
 
   event.waitUntil(
     (async () => {
@@ -63,19 +63,21 @@ globalThis.addEventListener('activate', (event) => {
           .filter(
             (key) =>
               key.startsWith(CACHE_PREFIX) &&
-              !Object.values(CACHES).includes(key as typeof CACHES[keyof typeof CACHES])
+              !Object.values(CACHES).includes(
+                key as (typeof CACHES)[keyof typeof CACHES],
+              ),
           )
           .map((key) => {
-            console.log('[SW] Deleting old cache:', key);
+            console.log("[SW] Deleting old cache:", key);
             return caches.delete(key);
-          })
+          }),
       );
 
       // Take control of all clients immediately
       await globalThis.clients.claim();
 
-      console.log('[SW] Service worker activated');
-    })()
+      console.log("[SW] Service worker activated");
+    })(),
   );
 });
 
@@ -83,7 +85,7 @@ globalThis.addEventListener('activate', (event) => {
 // FETCH
 // ============================================================================
 
-globalThis.addEventListener('fetch', (event) => {
+globalThis.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
@@ -94,12 +96,12 @@ globalThis.addEventListener('fetch', (event) => {
 
   // Don't intercept Vite dev server files (node_modules, @vite, @id, etc.)
   if (
-    url.pathname.startsWith('/node_modules/') ||
-    url.pathname.startsWith('/@vite/') ||
-    url.pathname.startsWith('/@id/') ||
-    url.pathname.startsWith('/@fs/') ||
-    url.searchParams.has('import') || // Vite import analysis
-    url.searchParams.has('t') // Vite timestamp for HMR
+    url.pathname.startsWith("/node_modules/") ||
+    url.pathname.startsWith("/@vite/") ||
+    url.pathname.startsWith("/@id/") ||
+    url.pathname.startsWith("/@fs/") ||
+    url.searchParams.has("import") || // Vite import analysis
+    url.searchParams.has("t") // Vite timestamp for HMR
   ) {
     return;
   }
@@ -110,16 +112,16 @@ globalThis.addEventListener('fetch', (event) => {
 
       // Determine strategy based on resource type
       const useNetworkFirst =
-        path.endsWith('.html') || path === '/' || !path.includes('.');
+        path.endsWith(".html") || path === "/" || !path.includes(".");
 
       if (useNetworkFirst) {
         // Network-first for HTML to get app updates
         try {
           const response = await fetch(request);
           const headers = new Headers(response.headers);
-          headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
-          headers.set('Cross-Origin-Opener-Policy', 'same-origin');
-          headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
+          headers.set("Cross-Origin-Embedder-Policy", "credentialless");
+          headers.set("Cross-Origin-Opener-Policy", "same-origin");
+          headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 
           const modifiedResponse = new Response(response.body, {
             status: response.status,
@@ -138,18 +140,18 @@ globalThis.addEventListener('fetch', (event) => {
         // Cache-first for static assets and JS chunks (faster + offline-friendly)
         const cachedResponse = await getCachedResponse(request);
         if (cachedResponse) {
-          console.log('[SW] Serving from cache:', path);
+          console.log("[SW] Serving from cache:", path);
           return cachedResponse;
         }
 
         // Not in cache, fetch from network
         try {
-          console.log('[SW] Cache miss, fetching from network:', path);
+          console.log("[SW] Cache miss, fetching from network:", path);
           const response = await fetch(request);
           const headers = new Headers(response.headers);
-          headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
-          headers.set('Cross-Origin-Opener-Policy', 'same-origin');
-          headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
+          headers.set("Cross-Origin-Embedder-Policy", "credentialless");
+          headers.set("Cross-Origin-Opener-Policy", "same-origin");
+          headers.set("Cross-Origin-Resource-Policy", "cross-origin");
 
           const modifiedResponse = new Response(response.body, {
             status: response.status,
@@ -160,11 +162,11 @@ globalThis.addEventListener('fetch', (event) => {
           await applyCachingStrategy(request, modifiedResponse.clone());
           return modifiedResponse;
         } catch (error) {
-          console.error('[SW] Network failed and no cache for:', path);
+          console.error("[SW] Network failed and no cache for:", path);
           throw error;
         }
       }
-    })()
+    })(),
   );
 });
 
@@ -180,7 +182,7 @@ async function getCachedResponse(request: Request): Promise<Response | null> {
   const path = url.pathname;
 
   // Try chunks cache first (for lazy-loaded modules)
-  if (path.includes('/assets/') && path.endsWith('.js')) {
+  if (path.includes("/assets/") && path.endsWith(".js")) {
     const chunksCache = await caches.open(CACHES.chunks);
     const cached = await chunksCache.match(request);
     if (cached) return cached;
@@ -204,14 +206,14 @@ async function getCachedResponse(request: Request): Promise<Response | null> {
  */
 async function applyCachingStrategy(
   request: Request,
-  response: Response
+  response: Response,
 ): Promise<void> {
   const url = new URL(request.url);
   const path = url.pathname;
 
   try {
     // Cache lazy-loaded chunks separately for offline support
-    if (path.includes('/assets/') && path.endsWith('.js')) {
+    if (path.includes("/assets/") && path.endsWith(".js")) {
       const cache = await caches.open(CACHES.chunks);
       await cache.put(request, response);
       return;
@@ -219,12 +221,12 @@ async function applyCachingStrategy(
 
     // Cache static assets (CSS, fonts, images)
     if (
-      path.endsWith('.css') ||
-      path.endsWith('.woff2') ||
-      path.endsWith('.woff') ||
-      path.endsWith('.png') ||
-      path.endsWith('.jpg') ||
-      path.endsWith('.svg')
+      path.endsWith(".css") ||
+      path.endsWith(".woff2") ||
+      path.endsWith(".woff") ||
+      path.endsWith(".png") ||
+      path.endsWith(".jpg") ||
+      path.endsWith(".svg")
     ) {
       const cache = await caches.open(CACHES.static);
       await cache.put(request, response);
@@ -232,20 +234,20 @@ async function applyCachingStrategy(
     }
 
     // Cache main JS files in static cache
-    if (path.endsWith('.js') && !path.includes('/assets/')) {
+    if (path.endsWith(".js") && !path.includes("/assets/")) {
       const cache = await caches.open(CACHES.static);
       await cache.put(request, response);
       return;
     }
 
     // Cache HTML (runtime cache)
-    if (path.endsWith('.html') || path === '/' || !path.includes('.')) {
+    if (path.endsWith(".html") || path === "/" || !path.includes(".")) {
       const cache = await caches.open(CACHES.runtime);
       await cache.put(request, response);
       return;
     }
   } catch (error) {
-    console.error('[SW] Error caching resource:', path, error);
+    console.error("[SW] Error caching resource:", path, error);
   }
 }
 
@@ -259,23 +261,23 @@ interface MessageEventData {
   code?: string;
 }
 
-globalThis.addEventListener('message', (event) => {
+globalThis.addEventListener("message", (event) => {
   const data = event.data as MessageEventData;
 
-  if (data.type === 'CACHE_COMPILED_SCENE') {
+  if (data.type === "CACHE_COMPILED_SCENE") {
     const { key, code } = data;
     if (!key || !code) return;
 
     caches.open(CACHES.compiled).then((cache) => {
       const response = new Response(code, {
-        headers: { 'Content-Type': 'application/javascript' },
+        headers: { "Content-Type": "application/javascript" },
       });
       cache.put(new Request(`/compiled/${key}`), response);
-      console.log('[SW] Cached compiled scene:', key);
+      console.log("[SW] Cached compiled scene:", key);
     });
   }
 
-  if (data.type === 'GET_CACHED_SCENE') {
+  if (data.type === "GET_CACHED_SCENE") {
     const { key } = data;
     if (!key) return;
 
@@ -292,16 +294,16 @@ globalThis.addEventListener('message', (event) => {
     });
   }
 
-  if (data.type === 'CLEAR_COMPILED_CACHE') {
+  if (data.type === "CLEAR_COMPILED_CACHE") {
     caches.delete(CACHES.compiled).then(() => {
-      console.log('[SW] Cleared compiled scene cache');
+      console.log("[SW] Cleared compiled scene cache");
       event.ports[0].postMessage({ success: true });
     });
   }
 
-  if (data.type === 'DEREGISTER') {
+  if (data.type === "DEREGISTER") {
     globalThis.registration.unregister().then(() => {
-      console.log('[SW] Service worker unregistered');
+      console.log("[SW] Service worker unregistered");
     });
   }
 });

@@ -21,7 +21,7 @@ export class ExportController {
 
   constructor(
     player: MotionCanvasPlayer,
-    callbacks: ExportControllerCallbacks
+    callbacks: ExportControllerCallbacks,
   ) {
     this.player = player;
     this.callbacks = callbacks;
@@ -66,7 +66,7 @@ export class ExportController {
         onProgress: (progress) => {
           const durationInSeconds = duration / sourceFps;
           const totalExportFrames = Math.ceil(
-            durationInSeconds * exportSettings.fps
+            durationInSeconds * exportSettings.fps,
           );
           const currentFrame = Math.floor((progress * totalExportFrames) / 100);
 
@@ -103,7 +103,7 @@ export class ExportController {
         canvas.width,
         canvas.height,
         duration,
-        sourceFps
+        sourceFps,
       );
 
       const wasPlaying = this.player.playing;
@@ -114,7 +114,7 @@ export class ExportController {
 
       const durationInSeconds = duration / sourceFps;
       const totalExportFrames = Math.ceil(
-        durationInSeconds * exportSettings.fps
+        durationInSeconds * exportSettings.fps,
       );
       const frameStep = duration / totalExportFrames;
 
@@ -145,7 +145,7 @@ export class ExportController {
       this.callbacks.onError(
         `Export failed: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     } finally {
       this.cleanup();

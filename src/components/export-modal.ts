@@ -1,11 +1,15 @@
-import { html, css, type TemplateResult } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { BaseModal } from './base-modal.js';
-import './base-button.js';
-import { isHTMLSelectElement, validateNumberInput, validateFloatInput } from '../utils/index.js';
-import type { ExportProgress } from '../export-controller';
+import { html, css, type TemplateResult } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
+import { BaseModal } from "./base-modal.js";
+import "./base-button.js";
+import {
+  isHTMLSelectElement,
+  validateNumberInput,
+  validateFloatInput,
+} from "../utils/index.js";
+import type { ExportProgress } from "../export-controller";
 
-@customElement('export-modal')
+@customElement("export-modal")
 export class ExportModal extends BaseModal {
   @property({ type: Object })
   progress?: ExportProgress;
@@ -94,18 +98,18 @@ export class ExportModal extends BaseModal {
         color: var(--ctp-mocha-overlay0);
         font-size: 13px;
       }
-    `
+    `,
   ];
 
   connectedCallback() {
     super.connectedCallback();
-    this.title = 'Export MP4';
+    this.title = "Export MP4";
     this.disabled = !!this.progress;
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>) {
     super.updated(changedProperties);
-    if (changedProperties.has('progress')) {
+    if (changedProperties.has("progress")) {
       this.disabled = !!this.progress;
     }
   }
@@ -126,7 +130,9 @@ export class ExportModal extends BaseModal {
           <label for="export-quality">Quality</label>
           <select id="export-quality" @change=${this.handleQualityChange}>
             <option value="0.6">Low (60%)</option>
-            <option value="0.8" ?selected=${this.quality === 0.8}>Medium (80%)</option>
+            <option value="0.8" ?selected=${this.quality === 0.8}>
+              Medium (80%)
+            </option>
             <option value="0.9">High (90%)</option>
             <option value="1">Maximum (100%)</option>
           </select>
@@ -136,7 +142,9 @@ export class ExportModal extends BaseModal {
           <label for="export-bitrate">Video Bitrate</label>
           <select id="export-bitrate" @change=${this.handleBitrateChange}>
             <option value="2000000">2 Mbps (Low)</option>
-            <option value="5000000" ?selected=${this.bitrate === 5000000}>5 Mbps (Medium)</option>
+            <option value="5000000" ?selected=${this.bitrate === 5000000}>
+              5 Mbps (Medium)
+            </option>
             <option value="10000000">10 Mbps (High)</option>
             <option value="20000000">20 Mbps (Ultra)</option>
           </select>
@@ -148,14 +156,18 @@ export class ExportModal extends BaseModal {
       <div class="export-progress">
         <div class="progress-header">
           <span class="progress-phase">
-            ${this.progress.phase.charAt(0).toUpperCase() + this.progress.phase.slice(1)}
+            ${this.progress.phase.charAt(0).toUpperCase() +
+            this.progress.phase.slice(1)}
           </span>
           <span class="progress-percentage">
             ${Math.round(this.progress.progress)}%
           </span>
         </div>
         <div class="progress-bar">
-          <div class="progress-bar-fill" style="width: ${this.progress.progress}%"></div>
+          <div
+            class="progress-bar-fill"
+            style="width: ${this.progress.progress}%"
+          ></div>
         </div>
         <div class="progress-message">${this.progress.message}</div>
       </div>
@@ -165,13 +177,19 @@ export class ExportModal extends BaseModal {
   protected renderFooter(): TemplateResult {
     if (!this.progress) {
       return html`
-        <base-button variant="cancel" @click=${this.handleClose}>Cancel</base-button>
-        <base-button variant="primary" @click=${this.handleStart}>Start Export</base-button>
+        <base-button variant="cancel" @click=${this.handleClose}
+          >Cancel</base-button
+        >
+        <base-button variant="primary" @click=${this.handleStart}
+          >Start Export</base-button
+        >
       `;
     }
 
     return html`
-      <base-button variant="danger" @click=${this.handleCancel}>Cancel Export</base-button>
+      <base-button variant="danger" @click=${this.handleCancel}
+        >Cancel Export</base-button
+      >
     `;
   }
 
@@ -189,7 +207,12 @@ export class ExportModal extends BaseModal {
 
   private handleBitrateChange = (e: Event): void => {
     if (isHTMLSelectElement(e.target)) {
-      this.bitrate = validateNumberInput(e.target.value, 5000000, 1000000, 50000000);
+      this.bitrate = validateNumberInput(
+        e.target.value,
+        5000000,
+        1000000,
+        50000000,
+      );
     }
   };
 
@@ -198,12 +221,12 @@ export class ExportModal extends BaseModal {
       fps: this.fps,
       quality: this.quality,
       videoBitrate: this.bitrate,
-      videoCodec: 'h264',
+      videoCodec: "h264",
     };
-    this.dispatchEvent(new CustomEvent('start', { detail: settings }));
+    this.dispatchEvent(new CustomEvent("start", { detail: settings }));
   };
 
   private handleCancel = (): void => {
-    this.dispatchEvent(new CustomEvent('cancel'));
+    this.dispatchEvent(new CustomEvent("cancel"));
   };
 }

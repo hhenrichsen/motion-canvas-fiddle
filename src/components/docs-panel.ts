@@ -64,7 +64,7 @@ export class DocsPanel extends LitElement {
       new CustomEvent("close", {
         bubbles: true,
         composed: true,
-      })
+      }),
     );
   }
 

@@ -44,12 +44,12 @@ export class SplitterController {
     // Reset both panels to their default flex values
     if (this.isMobile) {
       // Mobile: preview gets 30%, editor gets remainder
-      this.previewPanel.style.flex = '0 0 30%';
-      this.editorPanel.style.flex = '1';
+      this.previewPanel.style.flex = "0 0 30%";
+      this.editorPanel.style.flex = "1";
     } else {
       // Desktop: editor gets 50%, preview gets remainder
-      this.editorPanel.style.flex = '0 0 50%';
-      this.previewPanel.style.flex = '1 1 auto';
+      this.editorPanel.style.flex = "0 0 50%";
+      this.previewPanel.style.flex = "1 1 auto";
     }
   }
 
@@ -65,12 +65,12 @@ export class SplitterController {
 
     activeSplitter.addEventListener(
       "mousedown",
-      this.handleMouseDown.bind(this)
+      this.handleMouseDown.bind(this),
     );
     activeSplitter.addEventListener(
       "touchstart",
       this.handleTouchStart.bind(this),
-      { passive: false }
+      { passive: false },
     );
 
     document.addEventListener("mousemove", this.handleMouseMove.bind(this));
@@ -146,7 +146,7 @@ export class SplitterController {
 
     const newEditorWidth = Math.max(
       minEditorWidth,
-      Math.min(maxEditorWidth, mouseX)
+      Math.min(maxEditorWidth, mouseX),
     );
     const editorPercentage = (newEditorWidth / totalWidth) * 100;
 
@@ -171,7 +171,7 @@ export class SplitterController {
     // mouseYFromTop represents the desired preview height
     const newPreviewHeight = Math.max(
       minPreviewHeight,
-      Math.min(maxPreviewHeight, mouseYFromTop)
+      Math.min(maxPreviewHeight, mouseYFromTop),
     );
     const previewPercentage = (newPreviewHeight / totalHeight) * 100;
 
@@ -251,11 +251,11 @@ export class SplitterController {
     if (activeSplitter) {
       activeSplitter.removeEventListener(
         "mousedown",
-        this.handleMouseDown.bind(this)
+        this.handleMouseDown.bind(this),
       );
       activeSplitter.removeEventListener(
         "touchstart",
-        this.handleTouchStart.bind(this)
+        this.handleTouchStart.bind(this),
       );
     }
 

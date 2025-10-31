@@ -23,13 +23,13 @@ export interface MCFiddleServiceWorker {
 export async function registerServiceWorker(): Promise<void> {
   // Check if we're in a secure context
   if (!window.isSecureContext) {
-    console.warn('[SW] Service worker requires HTTPS or localhost');
+    console.warn("[SW] Service worker requires HTTPS or localhost");
     return;
   }
 
   // Check if service workers are supported
-  if (!('serviceWorker' in navigator)) {
-    console.warn('[SW] Service workers not supported');
+  if (!("serviceWorker" in navigator)) {
+    console.warn("[SW] Service workers not supported");
     return;
   }
 
@@ -37,11 +37,11 @@ export async function registerServiceWorker(): Promise<void> {
     // Register the service worker
     // Built from src/service-worker.ts to public/service-worker.js
     // Vite serves it from public/ in dev, copies to dist/ in production
-    await navigator.serviceWorker.register('./service-worker.js', {
-      scope: './',
+    await navigator.serviceWorker.register("./service-worker.js", {
+      scope: "./",
     });
 
-    console.log('[SW] Service worker registered');
+    console.log("[SW] Service worker registered");
 
     // Wait for the service worker to be ready
     await navigator.serviceWorker.ready;
@@ -50,25 +50,25 @@ export async function registerServiceWorker(): Promise<void> {
     // (only needed if not already isolated)
     if (!window.crossOriginIsolated) {
       // Check if we've already reloaded once
-      const reloadKey = 'sw-reload-attempted';
+      const reloadKey = "sw-reload-attempted";
       const hasReloaded = sessionStorage.getItem(reloadKey);
 
       if (!hasReloaded) {
-        console.log('[SW] Reloading to apply cross-origin isolation headers');
-        sessionStorage.setItem(reloadKey, 'true');
+        console.log("[SW] Reloading to apply cross-origin isolation headers");
+        sessionStorage.setItem(reloadKey, "true");
         window.location.reload();
       } else {
-        console.warn('[SW] Cross-origin isolation not achieved after reload');
+        console.warn("[SW] Cross-origin isolation not achieved after reload");
         // Clear the flag for next time
         sessionStorage.removeItem(reloadKey);
       }
     } else {
       // Already cross-origin isolated (or just became isolated)
-      sessionStorage.removeItem('sw-reload-attempted');
-      console.log('[SW] Cross-origin isolation enabled, caching active');
+      sessionStorage.removeItem("sw-reload-attempted");
+      console.log("[SW] Cross-origin isolation enabled, caching active");
     }
   } catch (error) {
-    console.error('[SW] Service worker registration failed:', error);
+    console.error("[SW] Service worker registration failed:", error);
   }
 }
 
@@ -87,7 +87,7 @@ export function createServiceWorkerAPI(): MCFiddleServiceWorker {
       }
 
       controller.postMessage({
-        type: 'CACHE_COMPILED_SCENE',
+        type: "CACHE_COMPILED_SCENE",
         key,
         code,
       });
@@ -115,10 +115,9 @@ export function createServiceWorkerAPI(): MCFiddleServiceWorker {
           }
         };
 
-        controller.postMessage(
-          { type: 'GET_CACHED_SCENE', key },
-          [messageChannel.port2]
-        );
+        controller.postMessage({ type: "GET_CACHED_SCENE", key }, [
+          messageChannel.port2,
+        ]);
       });
     },
 
@@ -138,10 +137,9 @@ export function createServiceWorkerAPI(): MCFiddleServiceWorker {
           resolve(event.data.success as boolean);
         };
 
-        controller.postMessage(
-          { type: 'CLEAR_COMPILED_CACHE' },
-          [messageChannel.port2]
-        );
+        controller.postMessage({ type: "CLEAR_COMPILED_CACHE" }, [
+          messageChannel.port2,
+        ]);
       });
     },
 
@@ -162,9 +160,9 @@ export function createServiceWorkerAPI(): MCFiddleServiceWorker {
 }
 
 // Auto-register and expose API on window
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   registerServiceWorker().catch((error) => {
-    console.error('[SW] Failed to register service worker:', error);
+    console.error("[SW] Failed to register service worker:", error);
   });
 
   // Expose API globally for compatibility

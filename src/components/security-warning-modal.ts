@@ -1,12 +1,12 @@
-import {html, css, type TemplateResult} from 'lit';
-import {customElement, state} from 'lit/decorators.js';
-import {BaseModal} from './base-modal.js';
-import './base-button.js';
-import {isHTMLInputElement} from '../utils/index.js';
+import { html, css, type TemplateResult } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import { BaseModal } from "./base-modal.js";
+import "./base-button.js";
+import { isHTMLInputElement } from "../utils/index.js";
 
-const STORAGE_KEY = 'motion-canvas-fiddle-disable-url-warning';
+const STORAGE_KEY = "motion-canvas-fiddle-disable-url-warning";
 
-@customElement('security-warning-modal')
+@customElement("security-warning-modal")
 export class SecurityWarningModal extends BaseModal {
   @state()
   private dontShowAgain = false;
@@ -50,7 +50,7 @@ export class SecurityWarningModal extends BaseModal {
         margin-bottom: 8px;
       }
 
-      .checkbox-container input[type='checkbox'] {
+      .checkbox-container input[type="checkbox"] {
         width: 18px;
         height: 18px;
         cursor: pointer;
@@ -68,12 +68,12 @@ export class SecurityWarningModal extends BaseModal {
   ];
 
   static isWarningDisabled(): boolean {
-    return localStorage.getItem(STORAGE_KEY) === 'true';
+    return localStorage.getItem(STORAGE_KEY) === "true";
   }
 
   static setWarningDisabled(disabled: boolean): void {
     if (disabled) {
-      localStorage.setItem(STORAGE_KEY, 'true');
+      localStorage.setItem(STORAGE_KEY, "true");
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -81,7 +81,7 @@ export class SecurityWarningModal extends BaseModal {
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.title = 'Security Notice';
+    this.title = "Security Notice";
   }
 
   private handleCheckboxChange(e: Event): void {
@@ -94,7 +94,7 @@ export class SecurityWarningModal extends BaseModal {
     if (this.dontShowAgain) {
       SecurityWarningModal.setWarningDisabled(true);
     }
-    this.dispatchEvent(new CustomEvent('continue'));
+    this.dispatchEvent(new CustomEvent("continue"));
     this.handleClose();
   }
 
@@ -102,7 +102,10 @@ export class SecurityWarningModal extends BaseModal {
     return html`
       <div class="warning-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M13 14h-2V9h2m0 9h-2v-2h2M1 21h22L12 2z"/>
+          <path
+            fill="currentColor"
+            d="M13 14h-2V9h2m0 9h-2v-2h2M1 21h22L12 2z"
+          />
         </svg>
       </div>
 
@@ -145,6 +148,6 @@ export class SecurityWarningModal extends BaseModal {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'security-warning-modal': SecurityWarningModal;
+    "security-warning-modal": SecurityWarningModal;
   }
 }

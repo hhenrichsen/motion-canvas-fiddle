@@ -1,6 +1,6 @@
-let prettierModule: typeof import('prettier/standalone') | null = null;
-let parserBabelModule: typeof import('prettier/plugins/babel') | null = null;
-let parserEstreeModule: typeof import('prettier/plugins/estree') | null = null;
+let prettierModule: typeof import("prettier/standalone") | null = null;
+let parserBabelModule: typeof import("prettier/plugins/babel") | null = null;
+let parserEstreeModule: typeof import("prettier/plugins/estree") | null = null;
 let isLoading = false;
 
 interface ImportStatement {
@@ -43,10 +43,10 @@ function combineImports(code: string): string {
     ] = match;
 
     const namedImports: string[] = [];
-    const namedImportsStr = namedImportsOnly || namedWithDefault || '';
+    const namedImportsStr = namedImportsOnly || namedWithDefault || "";
 
     if (namedImportsStr) {
-      namedImportsStr.split(',').forEach((item) => {
+      namedImportsStr.split(",").forEach((item) => {
         const trimmed = item.trim();
         if (trimmed) {
           namedImports.push(trimmed);
@@ -95,7 +95,7 @@ function combineImports(code: string): string {
     }
 
     // Build combined import statement
-    let importStatement = 'import ';
+    let importStatement = "import ";
     const parts: string[] = [];
 
     if (defaultImport) {
@@ -108,11 +108,11 @@ function combineImports(code: string): string {
 
     if (allNamedImports.size > 0) {
       const sortedNamedImports = Array.from(allNamedImports).sort();
-      parts.push(`{${sortedNamedImports.join(', ')}}`);
+      parts.push(`{${sortedNamedImports.join(", ")}}`);
     }
 
     if (parts.length > 0) {
-      importStatement += parts.join(', ') + ' from ';
+      importStatement += parts.join(", ") + " from ";
     }
 
     importStatement += `'${source}';`;
@@ -122,16 +122,16 @@ function combineImports(code: string): string {
   // Reconstruct code with combined imports
   const result: string[] = [];
   if (combinedImports.length > 0) {
-    result.push(combinedImports.join('\n'));
+    result.push(combinedImports.join("\n"));
   }
   if (nonImportLines.length > 0) {
-    result.push(nonImportLines.join('\n'));
+    result.push(nonImportLines.join("\n"));
   }
   if (remainingCode) {
     result.push(remainingCode);
   }
 
-  return result.join('\n\n');
+  return result.join("\n\n");
 }
 
 /**
@@ -192,7 +192,7 @@ export function formatCode(code: string): Promise<string> {
   try {
     processedCode = combineImports(code);
   } catch (error) {
-    console.warn('Failed to combine imports:', error);
+    console.warn("Failed to combine imports:", error);
     // Continue with original code if import combining fails
     processedCode = code;
   }
@@ -204,10 +204,10 @@ export function formatCode(code: string): Promise<string> {
 
   try {
     const formatted = prettierModule.format(processedCode, {
-      parser: 'babel-ts',
+      parser: "babel-ts",
       plugins: [parserBabelModule, parserEstreeModule],
       singleQuote: true,
-      trailingComma: 'all',
+      trailingComma: "all",
       printWidth: 80,
       tabWidth: 2,
       semi: true,
@@ -218,7 +218,7 @@ export function formatCode(code: string): Promise<string> {
   } catch (error) {
     // If formatting fails, return the processed code (with combined imports)
     // This ensures the user's code is never lost due to syntax errors
-    console.warn('Failed to format code:', error);
+    console.warn("Failed to format code:", error);
     return Promise.resolve(processedCode);
   }
 }

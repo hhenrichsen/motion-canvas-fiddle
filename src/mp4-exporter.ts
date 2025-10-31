@@ -33,7 +33,7 @@ export class MP4Exporter {
     width: number,
     height: number,
     duration: number,
-    sourceFps: number
+    sourceFps: number,
   ): Promise<void> {
     if (this.isExporting) {
       throw new Error("Export already in progress");
@@ -92,7 +92,7 @@ export class MP4Exporter {
       this.callbacks.onError(
         `Failed to start export: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }
@@ -120,7 +120,7 @@ export class MP4Exporter {
         0,
         0,
         this.canvas.width,
-        this.canvas.height
+        this.canvas.height,
       );
 
       // Calculate timestamp and duration for this frame
@@ -140,7 +140,7 @@ export class MP4Exporter {
         this.callbacks.onError(
           `Failed to add frame: ${
             error instanceof Error ? error.message : String(error)
-          }`
+          }`,
         );
       }
     }
@@ -172,7 +172,7 @@ export class MP4Exporter {
         this.callbacks.onError(
           `Failed to finalize export: ${
             error instanceof Error ? error.message : String(error)
-          }`
+          }`,
         );
       }
     } finally {

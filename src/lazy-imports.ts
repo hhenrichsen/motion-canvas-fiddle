@@ -52,7 +52,7 @@ async function loadCanvasCommons(): Promise<unknown> {
   } catch (error) {
     console.error("Failed to load canvas-commons:", error);
     throw new Error(
-      "Failed to load @hhenrichsen/canvas-commons. Make sure it's installed."
+      "Failed to load @hhenrichsen/canvas-commons. Make sure it's installed.",
     );
   }
 }
@@ -63,7 +63,9 @@ async function loadMotionCanvasGraphing(): Promise<unknown> {
   }
 
   try {
-    motionCanvasGraphingModule = await import("@spidunno/motion-canvas-graphing");
+    motionCanvasGraphingModule = await import(
+      "@spidunno/motion-canvas-graphing"
+    );
 
     // Set up global module for user code access
     (window as any).MotionCanvasGraphing = motionCanvasGraphingModule;
@@ -72,7 +74,7 @@ async function loadMotionCanvasGraphing(): Promise<unknown> {
   } catch (error) {
     console.error("Failed to load motion-canvas-graphing:", error);
     throw new Error(
-      "Failed to load @spidunno/motion-canvas-graphing. Make sure it's installed."
+      "Failed to load @spidunno/motion-canvas-graphing. Make sure it's installed.",
     );
   }
 }
@@ -91,9 +93,7 @@ async function loadThree(): Promise<unknown> {
     return threeModule;
   } catch (error) {
     console.error("Failed to load three.js:", error);
-    throw new Error(
-      "Failed to load three.js. Make sure it's installed."
-    );
+    throw new Error("Failed to load three.js. Make sure it's installed.");
   }
 }
 
@@ -111,9 +111,7 @@ async function loadShiki(): Promise<unknown> {
     return shikiModule;
   } catch (error) {
     console.error("Failed to load shiki:", error);
-    throw new Error(
-      "Failed to load shiki. Make sure it's installed."
-    );
+    throw new Error("Failed to load shiki. Make sure it's installed.");
   }
 }
 
@@ -126,14 +124,14 @@ async function loadShikiHighlighter(): Promise<unknown> {
     shikiHighlighterModule = await import("./shiki");
 
     // Set up global module for user code access
-    (window as any).ShikiHighlighter = (shikiHighlighterModule as any).ShikiHighlighter;
+    (window as any).ShikiHighlighter = (
+      shikiHighlighterModule as any
+    ).ShikiHighlighter;
 
     return shikiHighlighterModule;
   } catch (error) {
     console.error("Failed to load ShikiHighlighter:", error);
-    throw new Error(
-      "Failed to load ShikiHighlighter from ./shiki."
-    );
+    throw new Error("Failed to load ShikiHighlighter from ./shiki.");
   }
 }
 
@@ -225,14 +223,12 @@ async function loadLezer(): Promise<unknown> {
     return lezerModule;
   } catch (error) {
     console.error("Failed to load lezer:", error);
-    throw new Error(
-      "Failed to load lezer. Make sure it's installed."
-    );
+    throw new Error("Failed to load lezer. Make sure it's installed.");
   }
 }
 
 export async function loadCoreModules(
-  updateProgress: (progress: number, message: string) => void
+  updateProgress: (progress: number, message: string) => void,
 ): Promise<LazyModules> {
   if (cachedModules) {
     return cachedModules;

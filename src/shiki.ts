@@ -30,9 +30,10 @@ export type ShikiOptions = {
 
 export class ShikiHighlighter implements CodeHighlighter<ThemedToken[]> {
   private shikiOptions: ShikiOptions;
-  private handle: PromiseHandle<
-    HighlighterGeneric<BundledLanguage, BundledTheme> | null
-  > | null;
+  private handle: PromiseHandle<HighlighterGeneric<
+    BundledLanguage,
+    BundledTheme
+  > | null> | null;
 
   constructor(shikiOptions: ShikiOptions) {
     this.shikiOptions = shikiOptions;
@@ -48,7 +49,7 @@ export class ShikiHighlighter implements CodeHighlighter<ThemedToken[]> {
           ...this.shikiOptions.highlighter,
           langs: [this.shikiOptions.highlighter.lang],
           themes: [this.shikiOptions.highlighter.theme],
-        })
+        }),
       );
 
       return false;
@@ -62,7 +63,7 @@ export class ShikiHighlighter implements CodeHighlighter<ThemedToken[]> {
 
     const result = this.handle.value.codeToTokens(
       code,
-      this.codeToTokensOptions()
+      this.codeToTokensOptions(),
     );
 
     return result.tokens.flat();
@@ -94,7 +95,7 @@ export class ShikiHighlighter implements CodeHighlighter<ThemedToken[]> {
       .tokens.map((line) => line.map(({ content }) => content));
 
     const tokens = lineTokens.flatMap((line, i) =>
-      i === lineTokens.length - 1 ? line : [...line, "\n"]
+      i === lineTokens.length - 1 ? line : [...line, "\n"],
     );
 
     return tokens;

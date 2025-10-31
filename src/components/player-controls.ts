@@ -189,7 +189,7 @@ export class PlayerControls extends LitElement {
     if (this.duration <= 0) return;
 
     const progressBar = this.shadowRoot?.querySelector(
-      ".progress-bar"
+      ".progress-bar",
     ) as HTMLElement;
     if (!progressBar) return;
 

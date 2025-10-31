@@ -1,9 +1,15 @@
-import { LitElement, html, css, type CSSResultGroup, type TemplateResult } from 'lit';
-import { property } from 'lit/decorators.js';
+import {
+  LitElement,
+  html,
+  css,
+  type CSSResultGroup,
+  type TemplateResult,
+} from "lit";
+import { property } from "lit/decorators.js";
 
 export abstract class BaseModal extends LitElement {
   @property({ type: String })
-  title = '';
+  title = "";
 
   @property({ type: Boolean })
   disabled = false;
@@ -81,7 +87,9 @@ export abstract class BaseModal extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s, color 0.2s;
+      transition:
+        background 0.2s,
+        color 0.2s;
     }
 
     .close-btn:hover {
@@ -128,16 +136,16 @@ export abstract class BaseModal extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.addEventListener('keydown', this.handleKeydown);
+    this.addEventListener("keydown", this.handleKeydown);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    this.removeEventListener('keydown', this.handleKeydown);
+    this.removeEventListener("keydown", this.handleKeydown);
   }
 
   private handleKeydown = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape' && !this.disabled) {
+    if (e.key === "Escape" && !this.disabled) {
       this.handleClose();
     }
   };
@@ -149,7 +157,7 @@ export abstract class BaseModal extends LitElement {
   };
 
   protected handleClose(): void {
-    this.dispatchEvent(new CustomEvent('close'));
+    this.dispatchEvent(new CustomEvent("close"));
   }
 
   protected abstract renderBody(): TemplateResult;
@@ -160,21 +168,21 @@ export abstract class BaseModal extends LitElement {
       <div class="modal-content" @click=${(e: Event) => e.stopPropagation()}>
         <div class="modal-header">
           <h3>${this.title}</h3>
-          <button class="close-btn" @click=${this.handleClose} ?disabled=${this.disabled}>
+          <button
+            class="close-btn"
+            @click=${this.handleClose}
+            ?disabled=${this.disabled}
+          >
             &times;
           </button>
         </div>
-        <div class="modal-body">
-          ${this.renderBody()}
-        </div>
-        <div class="modal-footer">
-          ${this.renderFooter()}
-        </div>
+        <div class="modal-body">${this.renderBody()}</div>
+        <div class="modal-footer">${this.renderFooter()}</div>
       </div>
     `;
   }
 
   firstUpdated() {
-    this.addEventListener('click', this.handleBackdropClick);
+    this.addEventListener("click", this.handleBackdropClick);
   }
 }

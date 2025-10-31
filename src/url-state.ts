@@ -42,7 +42,7 @@ export class URLStateManager {
       // and use 2000 characters as the limit
       if (testUrl.toString().length > 2000) {
         console.warn(
-          "Code is too large to save in URL (would exceed length limit)"
+          "Code is too large to save in URL (would exceed length limit)",
         );
         return;
       }
@@ -113,7 +113,7 @@ export class URLStateManager {
 
       if (Object.keys(cleanSettings).length > 0) {
         const compressed = LZString.compressToEncodedURIComponent(
-          JSON.stringify(cleanSettings)
+          JSON.stringify(cleanSettings),
         );
         url.searchParams.set(this.SETTINGS_PARAM, compressed);
       } else {

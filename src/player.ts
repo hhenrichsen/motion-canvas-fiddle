@@ -49,7 +49,7 @@ export class MotionCanvasPlayer {
 
     // Scene replacement mechanism enables live reloading without recreating the entire player
     this.sceneDescription.onReplaced = new ValueDispatcher(
-      this.sceneDescription
+      this.sceneDescription,
     );
     this.sceneDescription.onReplaced.current = this.sceneDescription;
 
@@ -78,7 +78,7 @@ export class MotionCanvasPlayer {
       initialSettings?.height || 1080,
     ]);
     this.project.meta.shared.background.set(
-      initialSettings?.background || null
+      initialSettings?.background || null,
     );
 
     const fps = initialSettings?.fps || 30;
@@ -137,7 +137,7 @@ export class MotionCanvasPlayer {
     try {
       await this.stage.render(
         this.player.playback.currentScene,
-        this.player.playback.previousScene
+        this.player.playback.previousScene,
       );
 
       if (this.stage.finalBuffer) {

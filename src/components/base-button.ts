@@ -1,16 +1,16 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
-export type ButtonVariant = 'default' | 'primary' | 'danger' | 'cancel';
-export type ButtonSize = 'small' | 'medium';
+export type ButtonVariant = "default" | "primary" | "danger" | "cancel";
+export type ButtonSize = "small" | "medium";
 
-@customElement('base-button')
+@customElement("base-button")
 export class BaseButton extends LitElement {
   @property({ type: String })
-  variant: ButtonVariant = 'default';
+  variant: ButtonVariant = "default";
 
   @property({ type: String })
-  size: ButtonSize = 'medium';
+  size: ButtonSize = "medium";
 
   @property({ type: Boolean })
   disabled = false;
@@ -38,12 +38,12 @@ export class BaseButton extends LitElement {
 
     /* Sizes */
     .btn--small {
-      padding: 6px 12px;
+      padding: 6px 6px;
       font-size: 13px;
     }
 
     .btn--medium {
-      padding: 8px 16px;
+      padding: 8px 8px;
       font-size: 14px;
     }
 
@@ -104,11 +104,13 @@ export class BaseButton extends LitElement {
   private handleClick = (e: Event): void => {
     if (!this.disabled) {
       e.stopPropagation();
-      this.dispatchEvent(new CustomEvent('click', {
-        detail: e,
-        bubbles: true,
-        composed: true
-      }));
+      this.dispatchEvent(
+        new CustomEvent("click", {
+          detail: e,
+          bubbles: true,
+          composed: true,
+        }),
+      );
     }
   };
 }

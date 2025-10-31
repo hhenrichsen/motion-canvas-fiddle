@@ -56,7 +56,7 @@ export class UIController {
     const playBtnMobile = document.querySelector(".play-btn-mobile");
     const pauseBtnMobile = document.querySelector(".pause-btn-mobile");
     const resetPlayerBtnMobile = document.querySelector(
-      ".reset-player-btn-mobile"
+      ".reset-player-btn-mobile",
     );
 
     resetBtn?.addEventListener("click", this.callbacks.onResetCode);
@@ -72,7 +72,7 @@ export class UIController {
     pauseBtnMobile?.addEventListener("click", this.callbacks.onPlayPause);
     resetPlayerBtnMobile?.addEventListener(
       "click",
-      this.callbacks.onResetPlayer
+      this.callbacks.onResetPlayer,
     );
   }
 
@@ -127,14 +127,14 @@ export class UIController {
 
   private setupProjectControls(): void {
     const widthInput = document.getElementById(
-      "canvas-width"
+      "canvas-width",
     ) as HTMLInputElement;
     const heightInput = document.getElementById(
-      "canvas-height"
+      "canvas-height",
     ) as HTMLInputElement;
     const fpsSelect = document.getElementById("fps") as HTMLSelectElement;
     const backgroundInput = document.getElementById(
-      "background-color"
+      "background-color",
     ) as HTMLInputElement;
     const clearBgBtn = document.getElementById("clear-bg");
 
@@ -182,17 +182,16 @@ export class UIController {
   }
 
   updatePlayState(playing: boolean): void {
-
     // Desktop controls
     const playBtn = document.getElementById("play-btn");
     const pauseBtn = document.getElementById("pause-btn");
 
     // Mobile controls
     const playBtnMobile = document.querySelector(
-      ".play-btn-mobile"
+      ".play-btn-mobile",
     ) as HTMLElement;
     const pauseBtnMobile = document.querySelector(
-      ".pause-btn-mobile"
+      ".pause-btn-mobile",
     ) as HTMLElement;
 
     // Update desktop controls
@@ -227,10 +226,10 @@ export class UIController {
 
     // Mobile progress elements
     const progressFillMobile = document.querySelector(
-      ".progress-fill-mobile"
+      ".progress-fill-mobile",
     ) as HTMLElement;
     const timeElementMobile = document.querySelector(
-      ".time-mobile"
+      ".time-mobile",
     ) as HTMLElement;
 
     const progress = duration > 0 ? (frame / duration) * 100 : 0;
@@ -297,7 +296,7 @@ export class UIController {
     const applySettingsBtn = document.getElementById("apply-settings");
     const clearBgBtn = document.getElementById("clear-bg");
     const backgroundInput = document.getElementById(
-      "background-color"
+      "background-color",
     ) as HTMLInputElement;
 
     // Show modal
@@ -354,14 +353,14 @@ export class UIController {
 
   private populateSettingsForm(settings: ProjectSettings): void {
     const widthInput = document.getElementById(
-      "canvas-width"
+      "canvas-width",
     ) as HTMLInputElement;
     const heightInput = document.getElementById(
-      "canvas-height"
+      "canvas-height",
     ) as HTMLInputElement;
     const fpsSelect = document.getElementById("fps") as HTMLSelectElement;
     const backgroundInput = document.getElementById(
-      "background-color"
+      "background-color",
     ) as HTMLInputElement;
 
     if (settings.width && widthInput) {
@@ -382,14 +381,14 @@ export class UIController {
 
   private async applyProjectSettings(): Promise<void> {
     const widthInput = document.getElementById(
-      "canvas-width"
+      "canvas-width",
     ) as HTMLInputElement;
     const heightInput = document.getElementById(
-      "canvas-height"
+      "canvas-height",
     ) as HTMLInputElement;
     const fpsSelect = document.getElementById("fps") as HTMLSelectElement;
     const backgroundInput = document.getElementById(
-      "background-color"
+      "background-color",
     ) as HTMLInputElement;
 
     const settings: ProjectSettings = {};
@@ -483,13 +482,13 @@ export class UIController {
 
     // Get export settings
     const fpsSelect = document.getElementById(
-      "export-fps"
+      "export-fps",
     ) as HTMLSelectElement;
     const qualitySelect = document.getElementById(
-      "export-quality"
+      "export-quality",
     ) as HTMLSelectElement;
     const bitrateSelect = document.getElementById(
-      "export-bitrate"
+      "export-bitrate",
     ) as HTMLSelectElement;
 
     const settings = {
@@ -512,7 +511,7 @@ export class UIController {
       await this.exportController.exportMP4(settings);
     } catch (error) {
       this.onExportError(
-        error instanceof Error ? error.message : String(error)
+        error instanceof Error ? error.message : String(error),
       );
     }
   }

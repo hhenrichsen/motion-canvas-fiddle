@@ -24,29 +24,29 @@ export interface FeatureFlags {
 
 // Known bundled packages that don't require WebContainer
 const BUNDLED_PACKAGES = new Set([
-  '@motion-canvas/core',
-  '@motion-canvas/2d',
-  '@hhenrichsen/canvas-commons',
-  '@spidunno/motion-canvas-graphing',
-  'three',
-  'shiki',
-  '@lezer/common',
-  '@lezer/highlight',
-  '@lezer/lr',
-  '@lezer/cpp',
-  '@lezer/css',
-  '@lezer/go',
-  '@lezer/html',
-  '@lezer/java',
-  '@lezer/javascript',
-  '@lezer/json',
-  '@lezer/markdown',
-  '@lezer/php',
-  '@lezer/python',
-  '@lezer/rust',
-  '@lezer/sass',
-  '@lezer/xml',
-  '@lezer/yaml',
+  "@motion-canvas/core",
+  "@motion-canvas/2d",
+  "@hhenrichsen/canvas-commons",
+  "@spidunno/motion-canvas-graphing",
+  "three",
+  "shiki",
+  "@lezer/common",
+  "@lezer/highlight",
+  "@lezer/lr",
+  "@lezer/cpp",
+  "@lezer/css",
+  "@lezer/go",
+  "@lezer/html",
+  "@lezer/java",
+  "@lezer/javascript",
+  "@lezer/json",
+  "@lezer/markdown",
+  "@lezer/php",
+  "@lezer/python",
+  "@lezer/rust",
+  "@lezer/sass",
+  "@lezer/xml",
+  "@lezer/yaml",
 ]);
 
 /**
@@ -77,9 +77,7 @@ export function detectFeatures(code: string): FeatureFlags {
 
   // Determine if WebContainer is needed
   flags.needsWebContainer =
-    flags.hasDecorators ||
-    flags.hasComplexExports ||
-    flags.hasExternalPackages;
+    flags.hasDecorators || flags.hasComplexExports || flags.hasExternalPackages;
 
   return flags;
 }
@@ -89,10 +87,10 @@ export function detectFeatures(code: string): FeatureFlags {
  */
 function removeComments(code: string): string {
   // Remove multi-line comments
-  let result = code.replace(/\/\*[\s\S]*?\*\//g, '');
+  let result = code.replace(/\/\*[\s\S]*?\*\//g, "");
 
   // Remove single-line comments (but preserve URLs)
-  result = result.replace(/(?<!:)\/\/.*/g, '');
+  result = result.replace(/(?<!:)\/\/.*/g, "");
 
   return result;
 }
@@ -104,7 +102,8 @@ function removeComments(code: string): string {
 function detectDecorators(code: string): boolean {
   // Pattern: @ followed by identifier, optionally followed by ()
   // Must be followed by class, method, property, get, set, or parameter
-  const decoratorPattern = /@\w+(\([^)]*\))?\s*(?:class|get|set|async|static|public|private|protected|readonly|\w+\s*[:(])/;
+  const decoratorPattern =
+    /@\w+(\([^)]*\))?\s*(?:class|get|set|async|static|public|private|protected|readonly|\w+\s*[:(])/;
 
   return decoratorPattern.test(code);
 }
@@ -114,16 +113,21 @@ function detectDecorators(code: string): boolean {
  */
 function detectComplexExports(code: string): boolean {
   // Count number of exports
-  const exportMatches = code.match(/\bexport\s+(class|function|const|let|var|type|interface|enum)/g);
+  const exportMatches = code.match(
+    /\bexport\s+(class|function|const|let|var|type|interface|enum)/g,
+  );
   const exportCount = exportMatches ? exportMatches.length : 0;
 
   // Check for re-exports
-  const hasReexports = /export\s+\*\s+from|export\s+\{[^}]+\}\s+from/.test(code);
+  const hasReexports = /export\s+\*\s+from|export\s+\{[^}]+\}\s+from/.test(
+    code,
+  );
 
   // Check for export default AND other exports (mixed exports)
   const hasDefaultExport = /export\s+default/.test(code);
   const hasNamedExports = exportCount > 0;
-  const hasMixedExports = hasDefaultExport && hasNamedExports && exportCount > 1;
+  const hasMixedExports =
+    hasDefaultExport && hasNamedExports && exportCount > 1;
 
   // Consider it complex if:
   // - Has re-exports
@@ -149,19 +153,19 @@ function detectExternalPackages(code: string): string[] {
     const importPath = match[1];
 
     // Skip relative imports (start with . or /)
-    if (importPath.startsWith('.') || importPath.startsWith('/')) {
+    if (importPath.startsWith(".") || importPath.startsWith("/")) {
       continue;
     }
 
     // Extract package name (handle scoped packages like @org/package)
     let packageName: string;
-    if (importPath.startsWith('@')) {
+    if (importPath.startsWith("@")) {
       // Scoped package: @org/package or @org/package/subpath
-      const parts = importPath.split('/');
+      const parts = importPath.split("/");
       packageName = parts.length >= 2 ? `${parts[0]}/${parts[1]}` : importPath;
     } else {
       // Regular package: package or package/subpath
-      packageName = importPath.split('/')[0];
+      packageName = importPath.split("/")[0];
     }
 
     // Check if it's a bundled package
@@ -179,24 +183,24 @@ function detectExternalPackages(code: string): string[] {
  */
 export function explainFeatures(flags: FeatureFlags): string {
   if (!flags.needsWebContainer) {
-    return 'Using fast Babel compilation';
+    return "Using fast Babel compilation";
   }
 
   const reasons: string[] = [];
 
   if (flags.hasDecorators) {
-    reasons.push('TypeScript decorators detected');
+    reasons.push("TypeScript decorators detected");
   }
 
   if (flags.hasComplexExports) {
-    reasons.push('Complex export patterns detected');
+    reasons.push("Complex export patterns detected");
   }
 
   if (flags.hasExternalPackages) {
-    reasons.push(`External packages: ${flags.externalPackages.join(', ')}`);
+    reasons.push(`External packages: ${flags.externalPackages.join(", ")}`);
   }
 
-  return `Using Vite (WebContainer) compilation: ${reasons.join('; ')}`;
+  return `Using Vite (WebContainer) compilation: ${reasons.join("; ")}`;
 }
 
 /**
@@ -212,7 +216,7 @@ export function isWebContainerAvailable(): boolean {
     return false;
   }
 
-  if (!('serviceWorker' in navigator)) {
+  if (!("serviceWorker" in navigator)) {
     return false;
   }
 

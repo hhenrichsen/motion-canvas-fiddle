@@ -26,7 +26,7 @@ export async function fetchFromGist(gistId: string): Promise<string> {
     const firstFileName = Object.keys(files)[0];
 
     if (!firstFileName) {
-      throw new Error('Gist has no files');
+      throw new Error("Gist has no files");
     }
 
     return files[firstFileName].content;

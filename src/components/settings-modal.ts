@@ -28,7 +28,7 @@ export class SettingsModal extends BaseModal {
   private urlCodeWarningDisabled = false;
 
   @state()
-  private compilationMode: 'auto' | 'babel' | 'webcontainer' = 'auto';
+  private compilationMode: "auto" | "babel" | "webcontainer" = "auto";
 
   @state()
   private crossOriginIsolated = false;
@@ -132,8 +132,12 @@ export class SettingsModal extends BaseModal {
     this.urlCodeWarningDisabled = SecurityWarningModal.isWarningDisabled();
 
     // Load compilation mode from localStorage
-    const savedMode = localStorage.getItem('compilationMode');
-    if (savedMode === 'auto' || savedMode === 'babel' || savedMode === 'webcontainer') {
+    const savedMode = localStorage.getItem("compilationMode");
+    if (
+      savedMode === "auto" ||
+      savedMode === "babel" ||
+      savedMode === "webcontainer"
+    ) {
       this.compilationMode = savedMode;
     }
 
@@ -210,7 +214,9 @@ export class SettingsModal extends BaseModal {
           <option value="babel">Always use Babel</option>
           <option value="webcontainer">Always use Vite (WebContainer)</option>
         </select>
-        <div style="color: var(--ctp-mocha-overlay0); font-size: 12px; margin-top: 8px;">
+        <div
+          style="color: var(--ctp-mocha-overlay0); font-size: 12px; margin-top: 8px;"
+        >
           ${this.crossOriginIsolated
             ? html`✓ WebContainer available (cross-origin isolated)`
             : html`⚠ WebContainer unavailable (not cross-origin isolated)`}
@@ -280,9 +286,9 @@ export class SettingsModal extends BaseModal {
   private handleCompilationModeChange = (e: Event): void => {
     if (isHTMLSelectElement(e.target)) {
       const value = e.target.value;
-      if (value === 'auto' || value === 'babel' || value === 'webcontainer') {
+      if (value === "auto" || value === "babel" || value === "webcontainer") {
         this.compilationMode = value;
-        localStorage.setItem('compilationMode', value);
+        localStorage.setItem("compilationMode", value);
       }
     }
   };
@@ -297,7 +303,7 @@ export class SettingsModal extends BaseModal {
     this.dispatchEvent(new CustomEvent("apply", { detail: settings }));
   };
 
-  public getCompilationMode(): 'auto' | 'babel' | 'webcontainer' {
+  public getCompilationMode(): "auto" | "babel" | "webcontainer" {
     return this.compilationMode;
   }
 }

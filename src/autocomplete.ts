@@ -1,9 +1,6 @@
 import { javascriptLanguage } from "@codemirror/lang-javascript";
 import { syntaxTree } from "@codemirror/language";
-import type {
-  CompletionContext,
-  Completion,
-} from "@codemirror/autocomplete";
+import type { CompletionContext, Completion } from "@codemirror/autocomplete";
 import type { EditorView } from "@codemirror/view";
 
 function isConstructor(obj: unknown): boolean {
@@ -16,12 +13,20 @@ interface CompletionOption extends Completion {
   label: string;
   type: string;
   package: string;
-  apply?: (view: EditorView, completion: Completion, from: number, to: number) => void;
+  apply?: (
+    view: EditorView,
+    completion: Completion,
+    from: number,
+    to: number,
+  ) => void;
 }
 
 const Options: CompletionOption[] = [];
 
-function loadModule(packageName: string, module: Record<string, unknown>): void {
+function loadModule(
+  packageName: string,
+  module: Record<string, unknown>,
+): void {
   Object.entries(module).forEach(([name, value]) => {
     const option: CompletionOption = {
       label: name,
@@ -32,7 +37,12 @@ function loadModule(packageName: string, module: Record<string, unknown>): void 
             : "function"
           : "variable",
       package: packageName,
-      apply: (view: EditorView, completion: Completion, from: number, to: number) => {
+      apply: (
+        view: EditorView,
+        completion: Completion,
+        from: number,
+        to: number,
+      ) => {
         // Insert the completion text
         view.dispatch({
           changes: { from, to, insert: completion.label },
@@ -49,14 +59,14 @@ function loadModule(packageName: string, module: Record<string, unknown>): void 
 function addImportIfNeeded(
   view: EditorView,
   symbol: string,
-  packageName: string
+  packageName: string,
 ): void {
   const doc = view.state.doc.toString();
   const lines = doc.split("\n");
 
   // Check if the symbol is already imported from this package
   const importRegex = new RegExp(
-    `import\\s+{[^}]*\\b${symbol}\\b[^}]*}\\s+from\\s+['"]${packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}['"]`
+    `import\\s+{[^}]*\\b${symbol}\\b[^}]*}\\s+from\\s+['"]${packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}['"]`,
   );
   if (importRegex.test(doc)) {
     return; // Already imported
@@ -64,7 +74,7 @@ function addImportIfNeeded(
 
   // Find existing import from the same package
   const existingImportRegex = new RegExp(
-    `import\\s+{([^}]*)}\\s+from\\s+['"]${packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}['"]`
+    `import\\s+{([^}]*)}\\s+from\\s+['"]${packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}['"]`,
   );
   const existingImportMatch = doc.match(existingImportRegex);
 
@@ -103,9 +113,7 @@ function addImportIfNeeded(
 
     if (lastImportLine !== -1) {
       // Insert after the last import
-      insertPos = lines
-        .slice(0, lastImportLine + 1)
-        .join("\n").length + 1;
+      insertPos = lines.slice(0, lastImportLine + 1).join("\n").length + 1;
     }
 
     const newImport = `import { ${symbol} } from '${packageName}';\n`;
@@ -120,7 +128,10 @@ function addImportIfNeeded(
 import("@motion-canvas/core")
   .then((module) => loadModule("@motion-canvas/core", module))
   .catch((error) => {
-    console.warn("Failed to load @motion-canvas/core for autocompletion:", error);
+    console.warn(
+      "Failed to load @motion-canvas/core for autocompletion:",
+      error,
+    );
   });
 
 import("@motion-canvas/2d")
@@ -133,13 +144,19 @@ import("@motion-canvas/2d")
 import("@hhenrichsen/canvas-commons")
   .then((module) => loadModule("@hhenrichsen/canvas-commons", module))
   .catch((error) => {
-    console.warn("Failed to load @hhenrichsen/canvas-commons for autocompletion:", error);
+    console.warn(
+      "Failed to load @hhenrichsen/canvas-commons for autocompletion:",
+      error,
+    );
   });
 
 import("@spidunno/motion-canvas-graphing")
   .then((module) => loadModule("@spidunno/motion-canvas-graphing", module))
   .catch((error) => {
-    console.warn("Failed to load @spidunno/motion-canvas-graphing for autocompletion:", error);
+    console.warn(
+      "Failed to load @spidunno/motion-canvas-graphing for autocompletion:",
+      error,
+    );
   });
 
 import("three")
@@ -157,27 +174,37 @@ import("shiki")
 // Add hardcoded ShikiHighlighter completions (local module)
 const shikiHighlighterOptions: CompletionOption[] = [
   {
-    label: 'ShikiHighlighter',
-    type: 'class',
-    package: './shiki',
-    detail: 'Code highlighter using Shiki',
-    apply: (view: EditorView, completion: Completion, from: number, to: number) => {
+    label: "ShikiHighlighter",
+    type: "class",
+    package: "./shiki",
+    detail: "Code highlighter using Shiki",
+    apply: (
+      view: EditorView,
+      completion: Completion,
+      from: number,
+      to: number,
+    ) => {
       view.dispatch({
         changes: { from, to, insert: completion.label },
       });
-      addImportIfNeeded(view, completion.label, './shiki');
+      addImportIfNeeded(view, completion.label, "./shiki");
     },
   },
   {
-    label: 'ShikiOptions',
-    type: 'type',
-    package: './shiki',
-    detail: 'Options for ShikiHighlighter',
-    apply: (view: EditorView, completion: Completion, from: number, to: number) => {
+    label: "ShikiOptions",
+    type: "type",
+    package: "./shiki",
+    detail: "Options for ShikiHighlighter",
+    apply: (
+      view: EditorView,
+      completion: Completion,
+      from: number,
+      to: number,
+    ) => {
       view.dispatch({
         changes: { from, to, insert: completion.label },
       });
-      addImportIfNeeded(view, completion.label, './shiki');
+      addImportIfNeeded(view, completion.label, "./shiki");
     },
   },
 ];
@@ -186,8 +213,20 @@ Options.push(...shikiHighlighterOptions);
 
 // Add lezer parser snippet completions
 const lezerLanguages = [
-  'cpp', 'css', 'go', 'html', 'java', 'javascript',
-  'json', 'markdown', 'php', 'python', 'rust', 'sass', 'xml', 'yaml'
+  "cpp",
+  "css",
+  "go",
+  "html",
+  "java",
+  "javascript",
+  "json",
+  "markdown",
+  "php",
+  "python",
+  "rust",
+  "sass",
+  "xml",
+  "yaml",
 ];
 
 for (const lang of lezerLanguages) {
@@ -197,7 +236,12 @@ for (const lang of lezerLanguages) {
     package: `@lezer/${lang}`,
     detail: `Import ${lang} parser`,
     info: `Adds: import { parser as ${lang} } from '@lezer/${lang}';`,
-    apply: (view: EditorView, _completion: Completion, from: number, to: number) => {
+    apply: (
+      view: EditorView,
+      _completion: Completion,
+      from: number,
+      to: number,
+    ) => {
       // Remove the trigger text
       view.dispatch({
         changes: { from, to, insert: "" },
@@ -216,7 +260,7 @@ function addLezerParserImport(view: EditorView, language: string): void {
 
   // Check if this parser import already exists
   const importRegex = new RegExp(
-    `import\\s+{[^}]*\\bparser\\s+as\\s+${language}\\b[^}]*}\\s+from\\s+['"]${packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}['"]`
+    `import\\s+{[^}]*\\bparser\\s+as\\s+${language}\\b[^}]*}\\s+from\\s+['"]${packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}['"]`,
   );
   if (importRegex.test(doc)) {
     return; // Already imported
@@ -237,9 +281,7 @@ function addLezerParserImport(view: EditorView, language: string): void {
 
   if (lastImportLine !== -1) {
     // Insert after the last import
-    insertPos = lines
-      .slice(0, lastImportLine + 1)
-      .join("\n").length + 1;
+    insertPos = lines.slice(0, lastImportLine + 1).join("\n").length + 1;
   }
 
   const newImport = `import { parser as ${language} } from '@lezer/${language}';\n`;
@@ -254,7 +296,7 @@ export function autocomplete() {
     autocomplete: (context: CompletionContext) => {
       const nodeBefore = syntaxTree(context.state).resolveInner(
         context.pos,
-        -1
+        -1,
       );
       if (nodeBefore.name === "String") return;
 

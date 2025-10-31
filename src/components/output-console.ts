@@ -1,13 +1,13 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { LitElement, html, css } from "lit";
+import { customElement, state } from "lit/decorators.js";
 
 export interface ConsoleMessage {
-  type: 'log' | 'error' | 'warn' | 'info';
+  type: "log" | "error" | "warn" | "info";
   message: string;
   timestamp: number;
 }
 
-@customElement('output-console')
+@customElement("output-console")
 export class OutputConsole extends LitElement {
   @state()
   private messages: ConsoleMessage[] = [];
@@ -64,7 +64,7 @@ export class OutputConsole extends LitElement {
       flex: 1;
       overflow-y: auto;
       padding: 8px;
-      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-family: "Consolas", "Monaco", "Courier New", monospace;
       font-size: 12px;
       line-height: 1.5;
     }
@@ -140,19 +140,19 @@ export class OutputConsole extends LitElement {
   `;
 
   public log(message: string): void {
-    this.addMessage('log', message);
+    this.addMessage("log", message);
   }
 
   public error(message: string): void {
-    this.addMessage('error', message);
+    this.addMessage("error", message);
   }
 
   public warn(message: string): void {
-    this.addMessage('warn', message);
+    this.addMessage("warn", message);
   }
 
   public info(message: string): void {
-    this.addMessage('info', message);
+    this.addMessage("info", message);
   }
 
   /**
@@ -160,7 +160,7 @@ export class OutputConsole extends LitElement {
    */
   private stripAnsi(text: string): string {
     // eslint-disable-next-line no-control-regex
-    return text.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
+    return text.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, "");
   }
 
   /**
@@ -175,10 +175,10 @@ export class OutputConsole extends LitElement {
   /**
    * Process message handling carriage returns and control characters
    */
-  private addMessage(type: ConsoleMessage['type'], message: string): void {
+  private addMessage(type: ConsoleMessage["type"], message: string): void {
     // Check if this is a cursor control sequence (spinner update)
     const hasCursorCtrl = this.hasCursorControl(message);
-    const hasCarriageReturn = message.includes('\r');
+    const hasCarriageReturn = message.includes("\r");
 
     // Strip ANSI escape codes
     const cleanMessage = this.stripAnsi(message);
@@ -193,7 +193,10 @@ export class OutputConsole extends LitElement {
     const isSpinnerOnly = /^[\\|/\-]$/.test(trimmedMessage);
 
     // If it has cursor control, carriage return, or is a spinner, try to update the last message
-    if ((hasCursorCtrl || hasCarriageReturn || isSpinnerOnly) && this.messages.length > 0) {
+    if (
+      (hasCursorCtrl || hasCarriageReturn || isSpinnerOnly) &&
+      this.messages.length > 0
+    ) {
       const lastMessage = this.messages[this.messages.length - 1];
 
       // Only update if it's the same type
@@ -209,11 +212,13 @@ export class OutputConsole extends LitElement {
         ];
 
         // Dispatch event for message count update
-        this.dispatchEvent(new CustomEvent('messagecount', {
-          detail: this.messages.length,
-          bubbles: true,
-          composed: true,
-        }));
+        this.dispatchEvent(
+          new CustomEvent("messagecount", {
+            detail: this.messages.length,
+            bubbles: true,
+            composed: true,
+          }),
+        );
         return;
       }
     }
@@ -230,40 +235,44 @@ export class OutputConsole extends LitElement {
 
     // Auto-scroll to bottom
     this.updateComplete.then(() => {
-      const body = this.shadowRoot?.querySelector('.console-body');
+      const body = this.shadowRoot?.querySelector(".console-body");
       if (body) {
         body.scrollTop = body.scrollHeight;
       }
     });
 
     // Dispatch event for message count update
-    this.dispatchEvent(new CustomEvent('messagecount', {
-      detail: this.messages.length,
-      bubbles: true,
-      composed: true,
-    }));
+    this.dispatchEvent(
+      new CustomEvent("messagecount", {
+        detail: this.messages.length,
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 
   private handleClear = (): void => {
     this.messages = [];
     // Dispatch event for message count update
-    this.dispatchEvent(new CustomEvent('messagecount', {
-      detail: 0,
-      bubbles: true,
-      composed: true,
-    }));
+    this.dispatchEvent(
+      new CustomEvent("messagecount", {
+        detail: 0,
+        bubbles: true,
+        composed: true,
+      }),
+    );
   };
 
-  private formatType(type: ConsoleMessage['type']): string {
+  private formatType(type: ConsoleMessage["type"]): string {
     switch (type) {
-      case 'log':
-        return 'LOG';
-      case 'error':
-        return 'ERROR';
-      case 'warn':
-        return 'WARN';
-      case 'info':
-        return 'INFO';
+      case "log":
+        return "LOG";
+      case "error":
+        return "ERROR";
+      case "warn":
+        return "WARN";
+      case "info":
+        return "INFO";
     }
   }
 
@@ -274,12 +283,10 @@ export class OutputConsole extends LitElement {
           <span>Console</span>
           ${this.messages.length > 0
             ? html`<span class="message-count">${this.messages.length}</span>`
-            : ''}
+            : ""}
         </div>
         <div class="console-actions">
-          <button class="console-btn" @click=${this.handleClear}>
-            Clear
-          </button>
+          <button class="console-btn" @click=${this.handleClear}>Clear</button>
         </div>
       </div>
       <div class="console-body">
@@ -293,7 +300,7 @@ export class OutputConsole extends LitElement {
                   </span>
                   <span class="message-content">${msg.message}</span>
                 </div>
-              `
+              `,
             )}
       </div>
     `;
@@ -302,6 +309,6 @@ export class OutputConsole extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'output-console': OutputConsole;
+    "output-console": OutputConsole;
   }
 }
