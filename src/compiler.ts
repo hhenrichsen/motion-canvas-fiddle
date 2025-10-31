@@ -1,5 +1,6 @@
 import { detectFeatures, isWebContainerAvailable, explainFeatures } from './feature-detector';
 import { compileWithWebContainer, type CompilationProgress, type Logger } from './webcontainer-compiler';
+import { canUseWebContainer } from './offline';
 
 interface CompilationContext {
   hasCanvasCommons: boolean;
@@ -38,8 +39,16 @@ export async function compileScene(
   console.log('[Compiler] Feature detection:', features);
   console.log('[Compiler]', explainFeatures(features));
 
+  // Check if we're offline - force Babel if so
+  const online = canUseWebContainer();
+  if (!online && (opts.forceWebContainer || features.needsWebContainer)) {
+    console.log('[Compiler] Offline mode detected - using Babel compilation (WebContainer disabled)');
+    opts.logger?.warn('[Compiler] Offline mode - WebContainer disabled');
+  }
+
   // Determine compilation strategy
   const shouldUseWebContainer =
+    online &&
     !opts.forceBabel &&
     (opts.forceWebContainer || features.needsWebContainer) &&
     isWebContainerAvailable();

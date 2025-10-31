@@ -1,2 +1,5 @@
 node_modules/
 dist/
+
+# Compiled service worker (built from src/service-worker.ts)
+public/service-worker.js

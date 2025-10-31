@@ -16,6 +16,8 @@ import type { LoadingOverlay } from "./components/loading-overlay";
 import type { FiddleApp } from "./components/fiddle-app";
 import { SecurityWarningModal } from "./components/security-warning-modal";
 import { fetchFromGist, fetchFromUrl } from "./code-loader";
+import { schedulePrefetch } from "./prefetch";
+import "./register-service-worker"; // Auto-registers service worker
 
 let editor: EditorView;
 let player: any;
@@ -270,6 +272,9 @@ async function init(): Promise<void> {
 
     // Preload Prettier in the background for formatting
     modules.preloadFormatter();
+
+    // Schedule prefetch of common library chunks during idle time for offline support
+    schedulePrefetch(modules);
 
     // Check if code came from URL and if we should show security warning
     const codeFromURL = initialCode !== null || gistId !== null || srcUrl !== null;

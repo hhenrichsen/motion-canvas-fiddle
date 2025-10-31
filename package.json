@@ -4,14 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "npm run build:sw && vite",
+    "build": "tsc && npm run build:sw && vite build",
+    "build:sw": "esbuild src/service-worker.ts --bundle --outfile=public/service-worker.js --format=iife --target=es2020",
     "preview": "vite preview"
   },
   "devDependencies": {
     "@types/babel__standalone": "^7.1.9",
     "@types/codemirror": "^5.60.15",
     "@types/three": "^0.156.0",
+    "esbuild": "^0.19.12",
     "terser": "^5.19.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.0"
