@@ -53,6 +53,11 @@ async function runAnimation(preserveFrame?: number): Promise<void> {
       forceWebContainer,
       forceBabel,
       logger,
+      loadMotionCanvasGraphing: modules.loadMotionCanvasGraphing,
+      loadThree: modules.loadThree,
+      loadShiki: modules.loadShiki,
+      loadShikiHighlighter: modules.loadShikiHighlighter,
+      loadLezer: modules.loadLezer,
       onProgress: (progress) => {
         console.log(
           `[${progress.stage}] ${progress.message} (${progress.progress}%)`

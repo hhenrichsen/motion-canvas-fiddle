@@ -2,6 +2,9 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   base: process.env.VITE_BASE_URL || "./",
+  server: {
+    allowedHosts: ["localhost", "oni"],
+  },
   build: {
     outDir: "dist",
     minify: "terser",
@@ -11,17 +14,13 @@ export default defineConfig({
       },
       output: {
         manualChunks: {
-          vendor: ['@motion-canvas/core', '@motion-canvas/2d'],
-          editor: ['@babel/standalone', 'codemirror']
-        }
-      }
+          vendor: ["@motion-canvas/core", "@motion-canvas/2d"],
+          editor: ["@babel/standalone", "codemirror"],
+        },
+      },
     },
   },
   optimizeDeps: {
-    include: [
-      "@motion-canvas/core",
-      "@motion-canvas/2d",
-      "chroma-js"
-    ],
+    include: ["@motion-canvas/core", "@motion-canvas/2d", "chroma-js"],
   },
 });

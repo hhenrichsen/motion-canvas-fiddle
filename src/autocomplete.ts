@@ -129,6 +129,126 @@ import("@motion-canvas/2d")
     console.warn("Failed to load @motion-canvas/2d for autocompletion:", error);
   });
 
+// Load additional libraries for autocompletion
+import("@hhenrichsen/canvas-commons")
+  .then((module) => loadModule("@hhenrichsen/canvas-commons", module))
+  .catch((error) => {
+    console.warn("Failed to load @hhenrichsen/canvas-commons for autocompletion:", error);
+  });
+
+import("@spidunno/motion-canvas-graphing")
+  .then((module) => loadModule("@spidunno/motion-canvas-graphing", module))
+  .catch((error) => {
+    console.warn("Failed to load @spidunno/motion-canvas-graphing for autocompletion:", error);
+  });
+
+import("three")
+  .then((module) => loadModule("three", module))
+  .catch((error) => {
+    console.warn("Failed to load three for autocompletion:", error);
+  });
+
+import("shiki")
+  .then((module) => loadModule("shiki", module))
+  .catch((error) => {
+    console.warn("Failed to load shiki for autocompletion:", error);
+  });
+
+// Add hardcoded ShikiHighlighter completions (local module)
+const shikiHighlighterOptions: CompletionOption[] = [
+  {
+    label: 'ShikiHighlighter',
+    type: 'class',
+    package: './shiki',
+    detail: 'Code highlighter using Shiki',
+    apply: (view: EditorView, completion: Completion, from: number, to: number) => {
+      view.dispatch({
+        changes: { from, to, insert: completion.label },
+      });
+      addImportIfNeeded(view, completion.label, './shiki');
+    },
+  },
+  {
+    label: 'ShikiOptions',
+    type: 'type',
+    package: './shiki',
+    detail: 'Options for ShikiHighlighter',
+    apply: (view: EditorView, completion: Completion, from: number, to: number) => {
+      view.dispatch({
+        changes: { from, to, insert: completion.label },
+      });
+      addImportIfNeeded(view, completion.label, './shiki');
+    },
+  },
+];
+
+Options.push(...shikiHighlighterOptions);
+
+// Add lezer parser snippet completions
+const lezerLanguages = [
+  'cpp', 'css', 'go', 'html', 'java', 'javascript',
+  'json', 'markdown', 'php', 'python', 'rust', 'sass', 'xml', 'yaml'
+];
+
+for (const lang of lezerLanguages) {
+  const option: CompletionOption = {
+    label: `lezer:${lang}`,
+    type: "snippet",
+    package: `@lezer/${lang}`,
+    detail: `Import ${lang} parser`,
+    info: `Adds: import { parser as ${lang} } from '@lezer/${lang}';`,
+    apply: (view: EditorView, _completion: Completion, from: number, to: number) => {
+      // Remove the trigger text
+      view.dispatch({
+        changes: { from, to, insert: "" },
+      });
+
+      // Add the import at the top
+      addLezerParserImport(view, lang);
+    },
+  };
+  Options.push(option);
+}
+
+function addLezerParserImport(view: EditorView, language: string): void {
+  const doc = view.state.doc.toString();
+  const packageName = `@lezer/${language}`;
+
+  // Check if this parser import already exists
+  const importRegex = new RegExp(
+    `import\\s+{[^}]*\\bparser\\s+as\\s+${language}\\b[^}]*}\\s+from\\s+['"]${packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}['"]`
+  );
+  if (importRegex.test(doc)) {
+    return; // Already imported
+  }
+
+  // Find the position after the last import or at the beginning
+  const lines = doc.split("\n");
+  let insertPos = 0;
+  let lastImportLine = -1;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim().startsWith("import ")) {
+      lastImportLine = i;
+    } else if (lastImportLine !== -1 && lines[i].trim() !== "") {
+      break;
+    }
+  }
+
+  if (lastImportLine !== -1) {
+    // Insert after the last import
+    insertPos = lines
+      .slice(0, lastImportLine + 1)
+      .join("\n").length + 1;
+  }
+
+  const newImport = `import { parser as ${language} } from '@lezer/${language}';\n`;
+
+  view.dispatch({
+    changes: { from: insertPos, insert: newImport },
+  });
+}
+
 export function autocomplete() {
   return javascriptLanguage.data.of({
     autocomplete: (context: CompletionContext) => {

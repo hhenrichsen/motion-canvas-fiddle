@@ -41,9 +41,33 @@ const state: WebContainerState = {
 const BASE_DEPENDENCIES: Record<string, string> = {
   '@motion-canvas/core': '^3.17.2',
   '@motion-canvas/2d': '^3.17.2',
-  '@hhenrichsen/canvas-commons': '^0.10.2',
   'vite': '^5.0.0',
   'typescript': '^5.3.3',
+};
+
+// Optional dependencies added only when used
+const OPTIONAL_DEPENDENCIES: Record<string, string> = {
+  '@hhenrichsen/canvas-commons': '^0.10.2',
+  '@spidunno/motion-canvas-graphing': 'latest',
+  'three': '^0.180.0',
+  'shiki': 'latest',
+  '@lezer/common': 'latest',
+  '@lezer/highlight': 'latest',
+  '@lezer/lr': 'latest',
+  '@lezer/cpp': '^1.1.3',
+  '@lezer/css': '^1.3.0',
+  '@lezer/go': '^1.0.1',
+  '@lezer/html': '^1.3.12',
+  '@lezer/java': '^1.1.3',
+  '@lezer/javascript': '^1.5.4',
+  '@lezer/json': '^1.0.3',
+  '@lezer/markdown': '^1.5.1',
+  '@lezer/php': '^1.0.5',
+  '@lezer/python': '^1.1.18',
+  '@lezer/rust': '^1.0.2',
+  '@lezer/sass': '^1.1.0',
+  '@lezer/xml': '^1.0.6',
+  '@lezer/yaml': '^1.0.3',
 };
 
 /**
@@ -74,15 +98,75 @@ async function bootWebContainer(onProgress?: ProgressCallback): Promise<WebConta
 }
 
 /**
+ * Detect which optional dependencies are used in the code
+ */
+function detectOptionalDependencies(code: string): string[] {
+  const used: string[] = [];
+
+  // Check for each optional dependency
+  if (code.includes('@hhenrichsen/canvas-commons')) {
+    used.push('@hhenrichsen/canvas-commons');
+  }
+  if (code.includes('@spidunno/motion-canvas-graphing')) {
+    used.push('@spidunno/motion-canvas-graphing');
+  }
+  if (code.includes('from "three"') || code.includes("from 'three'")) {
+    used.push('three');
+  }
+  if (code.includes('from "shiki"') || code.includes("from 'shiki'")) {
+    used.push('shiki');
+  }
+
+  // Check for lezer packages
+  const lezerPackages = [
+    '@lezer/common',
+    '@lezer/highlight',
+    '@lezer/lr',
+    '@lezer/cpp',
+    '@lezer/css',
+    '@lezer/go',
+    '@lezer/html',
+    '@lezer/java',
+    '@lezer/javascript',
+    '@lezer/json',
+    '@lezer/markdown',
+    '@lezer/php',
+    '@lezer/python',
+    '@lezer/rust',
+    '@lezer/sass',
+    '@lezer/xml',
+    '@lezer/yaml',
+  ];
+
+  for (const pkg of lezerPackages) {
+    if (code.includes(pkg)) {
+      used.push(pkg);
+    }
+  }
+
+  return used;
+}
+
+/**
  * Create the virtual file system structure
  */
 function createFileSystem(code: string, features: FeatureFlags): Record<string, any> {
   // Determine dependencies based on detected features
   const dependencies = { ...BASE_DEPENDENCIES };
 
+  // Add optional dependencies if used in code
+  const usedOptionalDeps = detectOptionalDependencies(code);
+  for (const pkg of usedOptionalDeps) {
+    if (OPTIONAL_DEPENDENCIES[pkg]) {
+      dependencies[pkg] = OPTIONAL_DEPENDENCIES[pkg];
+    }
+  }
+
   // Add external packages if detected
   for (const pkg of features.externalPackages) {
-    dependencies[pkg] = 'latest';
+    if (!dependencies[pkg]) {
+      dependencies[pkg] = 'latest';
+    }
   }
 
   const packageJson = {
@@ -112,6 +196,26 @@ export default defineConfig({
         '@motion-canvas/2d/jsx-runtime',
         '@motion-canvas/2d/lib/jsx-runtime',
         '@hhenrichsen/canvas-commons',
+        '@spidunno/motion-canvas-graphing',
+        'three',
+        'shiki',
+        '@lezer/common',
+        '@lezer/highlight',
+        '@lezer/lr',
+        '@lezer/cpp',
+        '@lezer/css',
+        '@lezer/go',
+        '@lezer/html',
+        '@lezer/java',
+        '@lezer/javascript',
+        '@lezer/json',
+        '@lezer/markdown',
+        '@lezer/php',
+        '@lezer/python',
+        '@lezer/rust',
+        '@lezer/sass',
+        '@lezer/xml',
+        '@lezer/yaml',
       ],
     },
     minify: false,
@@ -179,12 +283,20 @@ export default defineConfig({
  */
 async function installDependencies(
   container: WebContainer,
+  code: string,
   features: FeatureFlags,
   onProgress?: ProgressCallback,
   logger?: Logger
 ): Promise<void> {
+  // Build the actual dependency list
+  const usedOptionalDeps = detectOptionalDependencies(code);
+  const currentDeps = [
+    ...Object.keys(BASE_DEPENDENCIES),
+    ...usedOptionalDeps,
+    ...features.externalPackages
+  ].sort();
+
   // Check if we need to reinstall (dependencies changed)
-  const currentDeps = [...BASE_DEPENDENCIES && Object.keys(BASE_DEPENDENCIES), ...features.externalPackages].sort();
   const needsInstall = JSON.stringify(currentDeps) !== JSON.stringify(state.lastDependencies);
 
   if (!needsInstall && state.lastDependencies.length > 0) {
@@ -389,6 +501,188 @@ function replaceImportsWithGlobals(code: string): string {
     }
   );
 
+  // Replace motion-canvas-graphing imports
+  finalCode = finalCode.replace(
+    /import\s*{\s*([^}]+)\s*}\s*from\s*['"]@spidunno\/motion-canvas-graphing['"]/g,
+    (_match, imports) => {
+      const importItems = imports.split(',').map((item: string) => {
+        const trimmed = item.trim();
+        if (trimmed.includes(' as ')) {
+          const [original, alias] = trimmed.split(' as ').map((s: string) => s.trim());
+          return `const ${alias} = window.MotionCanvasGraphing.${original};`;
+        } else {
+          return `const ${trimmed} = window.MotionCanvasGraphing.${trimmed};`;
+        }
+      });
+      return importItems.join('\n');
+    }
+  );
+
+  finalCode = finalCode.replace(
+    /import\s+(\w+)\s*from\s*['"]@spidunno\/motion-canvas-graphing['"]/g,
+    (_match, importName) => {
+      return `const ${importName} = window.MotionCanvasGraphing.${importName};`;
+    }
+  );
+
+  // Replace three.js imports
+  finalCode = finalCode.replace(
+    /import\s*{\s*([^}]+)\s*}\s*from\s*['"]three['"]/g,
+    (_match, imports) => {
+      const importItems = imports.split(',').map((item: string) => {
+        const trimmed = item.trim();
+        if (trimmed.includes(' as ')) {
+          const [original, alias] = trimmed.split(' as ').map((s: string) => s.trim());
+          return `const ${alias} = window.THREE.${original};`;
+        } else {
+          return `const ${trimmed} = window.THREE.${trimmed};`;
+        }
+      });
+      return importItems.join('\n');
+    }
+  );
+
+  finalCode = finalCode.replace(
+    /import\s+\*\s+as\s+(\w+)\s*from\s*['"]three['"]/g,
+    (_match, importName) => {
+      return `const ${importName} = window.THREE;`;
+    }
+  );
+
+  // Replace shiki imports
+  finalCode = finalCode.replace(
+    /import\s*{\s*([^}]+)\s*}\s*from\s*['"]shiki['"]/g,
+    (_match, imports) => {
+      const importItems = imports.split(',').map((item: string) => {
+        const trimmed = item.trim();
+        if (trimmed.includes(' as ')) {
+          const [original, alias] = trimmed.split(' as ').map((s: string) => s.trim());
+          return `const ${alias} = window.Shiki.${original};`;
+        } else {
+          return `const ${trimmed} = window.Shiki.${trimmed};`;
+        }
+      });
+      return importItems.join('\n');
+    }
+  );
+
+  finalCode = finalCode.replace(
+    /import\s+\*\s+as\s+(\w+)\s*from\s*['"]shiki['"]/g,
+    (_match, importName) => {
+      return `const ${importName} = window.Shiki;`;
+    }
+  );
+
+  // Replace lezer imports
+  finalCode = finalCode.replace(
+    /import\s*{\s*([^}]+)\s*}\s*from\s*['"]@lezer\/common['"]/g,
+    (_match, imports) => {
+      const importItems = imports.split(',').map((item: string) => {
+        const trimmed = item.trim();
+        if (trimmed.includes(' as ')) {
+          const [original, alias] = trimmed.split(' as ').map((s: string) => s.trim());
+          return `const ${alias} = window.LezerCommon.${original};`;
+        } else {
+          return `const ${trimmed} = window.LezerCommon.${trimmed};`;
+        }
+      });
+      return importItems.join('\n');
+    }
+  );
+
+  finalCode = finalCode.replace(
+    /import\s*{\s*([^}]+)\s*}\s*from\s*['"]@lezer\/highlight['"]/g,
+    (_match, imports) => {
+      const importItems = imports.split(',').map((item: string) => {
+        const trimmed = item.trim();
+        if (trimmed.includes(' as ')) {
+          const [original, alias] = trimmed.split(' as ').map((s: string) => s.trim());
+          return `const ${alias} = window.LezerHighlight.${original};`;
+        } else {
+          return `const ${trimmed} = window.LezerHighlight.${trimmed};`;
+        }
+      });
+      return importItems.join('\n');
+    }
+  );
+
+  finalCode = finalCode.replace(
+    /import\s*{\s*([^}]+)\s*}\s*from\s*['"]@lezer\/lr['"]/g,
+    (_match, imports) => {
+      const importItems = imports.split(',').map((item: string) => {
+        const trimmed = item.trim();
+        if (trimmed.includes(' as ')) {
+          const [original, alias] = trimmed.split(' as ').map((s: string) => s.trim());
+          return `const ${alias} = window.LezerLR.${original};`;
+        } else {
+          return `const ${trimmed} = window.LezerLR.${trimmed};`;
+        }
+      });
+      return importItems.join('\n');
+    }
+  );
+
+  // Replace lezer language parser imports
+  const lezerParsers = [
+    { pkg: 'cpp', window: 'LezerCpp' },
+    { pkg: 'css', window: 'LezerCss' },
+    { pkg: 'go', window: 'LezerGo' },
+    { pkg: 'html', window: 'LezerHtml' },
+    { pkg: 'java', window: 'LezerJava' },
+    { pkg: 'javascript', window: 'LezerJavascript' },
+    { pkg: 'json', window: 'LezerJson' },
+    { pkg: 'markdown', window: 'LezerMarkdown' },
+    { pkg: 'php', window: 'LezerPhp' },
+    { pkg: 'python', window: 'LezerPython' },
+    { pkg: 'rust', window: 'LezerRust' },
+    { pkg: 'sass', window: 'LezerSass' },
+    { pkg: 'xml', window: 'LezerXml' },
+    { pkg: 'yaml', window: 'LezerYaml' },
+  ];
+
+  for (const { pkg, window: windowVar } of lezerParsers) {
+    const pattern = new RegExp(
+      `import\\s*{\\s*([^}]+)\\s*}\\s*from\\s*['"]@lezer/${pkg}['"]`,
+      'g'
+    );
+    finalCode = finalCode.replace(pattern, (_match, imports) => {
+      const importItems = imports.split(',').map((item: string) => {
+        const trimmed = item.trim();
+        if (trimmed.includes(' as ')) {
+          const [original, alias] = trimmed.split(' as ').map((s: string) => s.trim());
+          return `const ${alias} = window.${windowVar}.${original};`;
+        } else {
+          return `const ${trimmed} = window.${windowVar}.${trimmed};`;
+        }
+      });
+      return importItems.join('\n');
+    });
+  }
+
+  // Handle local ./shiki module
+  finalCode = finalCode.replace(
+    /import\s*{\s*([^}]+)\s*}\s*from\s*['"]\.\/shiki['"]/g,
+    (_match, imports) => {
+      const importItems = imports.split(',').map((item: string) => {
+        const trimmed = item.trim();
+        if (trimmed.includes(' as ')) {
+          const [original, alias] = trimmed.split(' as ').map((s: string) => s.trim());
+          return `const ${alias} = window.${original};`;
+        } else {
+          return `const ${trimmed} = window.${trimmed};`;
+        }
+      });
+      return importItems.join('\n');
+    }
+  );
+
+  finalCode = finalCode.replace(
+    /import\s+(\w+)\s*from\s*['"]\.\/shiki['"]/g,
+    (_match, importName) => {
+      return `const ${importName} = window.${importName};`;
+    }
+  );
+
   return finalCode;
 }
 
@@ -436,7 +730,7 @@ export async function compileWithWebContainer(
     logger?.info('[WebContainer] Project files ready');
 
     // Install dependencies
-    await installDependencies(container, features, onProgress, logger);
+    await installDependencies(container, code, features, onProgress, logger);
 
     // Build with Vite
     await buildScene(container, onProgress, logger);
