@@ -6,6 +6,8 @@ import { MotionCanvasPlayer } from "../player";
 import "./player-controls";
 import "./settings-modal";
 import "./export-modal";
+import "./help-modal";
+import "./docs-panel";
 import "./base-button";
 import "./output-console";
 import type { OutputConsole } from "./output-console";
@@ -49,6 +51,21 @@ export class FiddleApp extends LitElement {
   private showExport = false;
 
   @state()
+  private showHelp = false;
+
+  @state()
+  private showDocs = false;
+
+  @state()
+  private docsPanelWidth = 400;
+
+  @state()
+  private isResizingDocs = false;
+
+  private docsResizeStartX = 0;
+  private docsResizeStartWidth = 0;
+
+  @state()
   private exportProgress?: ExportProgress;
 
   @state()
@@ -78,8 +95,8 @@ export class FiddleApp extends LitElement {
       height: 100vh;
       background: var(--ctp-mocha-base);
       color: var(--ctp-mocha-text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        sans-serif;
+      font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     .container {
@@ -97,11 +114,39 @@ export class FiddleApp extends LitElement {
       border-bottom: 1px solid var(--ctp-mocha-surface0);
     }
 
+    .title-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     h1 {
       font-size: 20px;
       font-weight: 600;
       margin: 0;
       color: var(--ctp-mocha-text);
+    }
+
+    .help-icon-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ctp-mocha-sky);
+      transition: opacity 0.2s;
+    }
+
+    .help-icon-btn:hover {
+      opacity: 0.8;
+    }
+
+    .help-icon-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
     }
 
     .controls {
@@ -110,21 +155,19 @@ export class FiddleApp extends LitElement {
       align-items: center;
     }
 
-    .controls base-button {
-      min-width: 110px;
-    }
-
     .button-icon {
       display: none;
       width: 18px;
       height: 18px;
       /* Filter to convert black to ctp-mocha-text (#cdd6f4) */
-      filter: brightness(0) saturate(100%) invert(93%) sepia(8%) saturate(661%) hue-rotate(192deg) brightness(101%) contrast(93%);
+      filter: brightness(0) saturate(100%) invert(93%) sepia(8%) saturate(661%)
+        hue-rotate(192deg) brightness(101%) contrast(93%);
     }
 
     base-button[variant="primary"] .button-icon {
       /* Filter to convert black to ctp-mocha-base (#1e1e2e) */
-      filter: brightness(0) saturate(100%) invert(9%) sepia(9%) saturate(1562%) hue-rotate(202deg) brightness(97%) contrast(90%);
+      filter: brightness(0) saturate(100%) invert(9%) sepia(9%) saturate(1562%)
+        hue-rotate(202deg) brightness(97%) contrast(90%);
     }
 
     .button-text {
@@ -266,6 +309,47 @@ export class FiddleApp extends LitElement {
       position: relative;
     }
 
+    .docs-panel {
+      flex: 0 0 auto;
+      min-width: 300px;
+      max-width: 800px;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .docs-panel.visible {
+      display: flex;
+    }
+
+    .docs-splitter {
+      width: 4px;
+      background: var(--ctp-mocha-surface0);
+      cursor: col-resize;
+      position: relative;
+      flex-shrink: 0;
+      transition: background 0.2s;
+      display: none;
+    }
+
+    .docs-splitter.visible {
+      display: block;
+    }
+
+    .docs-splitter:hover {
+      background: var(--ctp-mocha-surface1);
+    }
+
+    .docs-toggle {
+      display: none;
+    }
+
+    @media (min-width: 1200px) {
+      .docs-toggle {
+        display: inline-flex;
+      }
+    }
+
     .panel-header {
       padding: 12px 16px;
       background: var(--ctp-mocha-mantle);
@@ -284,12 +368,9 @@ export class FiddleApp extends LitElement {
       border: 1px solid var(--ctp-mocha-sky);
       color: var(--ctp-mocha-base);
       cursor: pointer;
-      padding: 6px 12px;
+      padding: 6px 8px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      font-weight: 500;
       transition: opacity 0.2s;
       height: 32px;
       box-sizing: border-box;
@@ -512,6 +593,47 @@ export class FiddleApp extends LitElement {
       .mobile-controls {
         display: flex;
       }
+
+      .docs-panel {
+        display: none !important;
+      }
+
+      .docs-splitter {
+        display: none !important;
+      }
+
+      .docs-toggle {
+        display: none !important;
+      }
+    }
+
+    .drag-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 9999;
+      cursor: col-resize;
+      display: none;
+    }
+
+    .drag-overlay.active {
+      display: block;
+    }
+
+    @media (max-width: 1199px) {
+      .docs-panel {
+        display: none !important;
+      }
+
+      .docs-splitter {
+        display: none !important;
+      }
+
+      .docs-toggle {
+        display: none !important;
+      }
     }
   `;
 
@@ -519,18 +641,57 @@ export class FiddleApp extends LitElement {
     return html`
       <div class="container">
         <div class="header">
-          <h1>Motion Canvas Fiddle</h1>
+          <div class="title-area">
+            <h1>Motion Canvas Fiddle</h1>
+            <button
+              class="help-icon-btn"
+              @click=${this.showHelpModal}
+              title="Help"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  fill="currentColor"
+                  d="M13 9h-2V7h2zm0 8h-2v-6h2zM5 3h14a2 2 0 0 1 2 2v14c0 .53-.21 1.04-.59 1.41c-.37.38-.88.59-1.41.59H5c-.53 0-1.04-.21-1.41-.59C3.21 20.04 3 19.53 3 19V5c0-1.11.89-2 2-2m14 16V5H5v14z"
+                />
+              </svg>
+            </button>
+          </div>
           <div class="controls">
+            <base-button class="docs-toggle" @click=${this.toggleDocs}>
+              <img
+                class="button-icon"
+                src="${import.meta.env.BASE_URL}book-open.svg"
+                alt="Docs"
+              />
+              <span class="button-text">Docs</span>
+            </base-button>
             <base-button @click=${this.handleResetCode}>
-              <img class="button-icon" src="${import.meta.env.BASE_URL}restart.svg" alt="Reset" />
+              <img
+                class="button-icon"
+                src="${import.meta.env.BASE_URL}restart.svg"
+                alt="Reset"
+              />
               <span class="button-text">Reset Code</span>
             </base-button>
             <base-button @click=${this.showSettingsModal}>
-              <img class="button-icon" src="${import.meta.env.BASE_URL}cog.svg" alt="Settings" />
+              <img
+                class="button-icon"
+                src="${import.meta.env.BASE_URL}cog.svg"
+                alt="Settings"
+              />
               <span class="button-text">Settings</span>
             </base-button>
             <base-button variant="primary" @click=${this.showExportModal}>
-              <img class="button-icon" src="${import.meta.env.BASE_URL}video-image.svg" alt="Export" />
+              <img
+                class="button-icon"
+                src="${import.meta.env.BASE_URL}video-image.svg"
+                alt="Export"
+              />
               <span class="button-text">Export MP4</span>
             </base-button>
           </div>
@@ -541,24 +702,38 @@ export class FiddleApp extends LitElement {
               <span>Editor</span>
               <div style="display: flex; gap: 8px; align-items: center;">
                 <button
-                  class="editor-action-btn ${this.showConsole ? 'active' : ''}"
+                  class="editor-action-btn ${this.showConsole ? "active" : ""}"
                   @click=${this.toggleConsole}
                   title="Toggle console output"
                 >
                   Console
                   ${this.consoleMessageCount > 0
-                    ? html`<span class="console-badge">${this.consoleMessageCount}</span>`
-                    : ''}
+                    ? html`<span class="console-badge"
+                        >${this.consoleMessageCount}</span
+                      >`
+                    : ""}
                 </button>
                 <button
-                  class="editor-action-btn icon-only ${this.formattingEnabled ? 'active' : ''}"
+                  class="editor-action-btn icon-only ${this.formattingEnabled
+                    ? "active"
+                    : ""}"
                   @click=${this.toggleFormatting}
                   title="Toggle code formatting on save"
                 >
-                  <img src="${import.meta.env.BASE_URL}broom.svg" alt="Format" />
+                  <img
+                    src="${import.meta.env.BASE_URL}broom.svg"
+                    alt="Format"
+                  />
                 </button>
-                <button class="run-btn" @click=${this.handleRunAnimation} title="Save and run animation (Ctrl+S)">
-                  <img src="${import.meta.env.BASE_URL}save.svg" alt="Save & Run" />
+                <button
+                  class="run-btn"
+                  @click=${this.handleRunAnimation}
+                  title="Save and run animation (Ctrl+S)"
+                >
+                  <img
+                    src="${import.meta.env.BASE_URL}save.svg"
+                    alt="Save & Run"
+                  />
                 </button>
               </div>
             </div>
@@ -566,30 +741,50 @@ export class FiddleApp extends LitElement {
               <span>Editor</span>
               <div style="display: flex; gap: 8px; align-items: center;">
                 <button
-                  class="editor-action-btn ${this.showConsole ? 'active' : ''}"
+                  class="editor-action-btn ${this.showConsole ? "active" : ""}"
                   @click=${this.toggleConsole}
                   title="Toggle console output"
                 >
                   Console
                   ${this.consoleMessageCount > 0
-                    ? html`<span class="console-badge">${this.consoleMessageCount}</span>`
-                    : ''}
+                    ? html`<span class="console-badge"
+                        >${this.consoleMessageCount}</span
+                      >`
+                    : ""}
                 </button>
                 <button
-                  class="editor-action-btn icon-only ${this.formattingEnabled ? 'active' : ''}"
+                  class="editor-action-btn icon-only ${this.formattingEnabled
+                    ? "active"
+                    : ""}"
                   @click=${this.toggleFormatting}
                   title="Toggle code formatting on save"
                 >
-                  <img src="${import.meta.env.BASE_URL}broom.svg" alt="Format" />
+                  <img
+                    src="${import.meta.env.BASE_URL}broom.svg"
+                    alt="Format"
+                  />
                 </button>
-                <button class="run-btn" @click=${this.handleRunAnimation} title="Save and run animation (Ctrl+S)">
-                  <img src="${import.meta.env.BASE_URL}save.svg" alt="Save & Run" />
+                <button
+                  class="run-btn"
+                  @click=${this.handleRunAnimation}
+                  title="Save and run animation (Ctrl+S)"
+                >
+                  <img
+                    src="${import.meta.env.BASE_URL}save.svg"
+                    alt="Save & Run"
+                  />
                 </button>
               </div>
             </div>
-            <div class="editor-console-wrapper ${this.showConsole ? 'with-console' : ''}">
+            <div
+              class="editor-console-wrapper ${this.showConsole
+                ? "with-console"
+                : ""}"
+            >
               <div id="editor"></div>
-              <output-console @messagecount=${this.handleMessageCount}></output-console>
+              <output-console
+                @messagecount=${this.handleMessageCount}
+              ></output-console>
             </div>
           </div>
           <div class="splitter" id="splitter"></div>
@@ -630,9 +825,22 @@ export class FiddleApp extends LitElement {
               </div>
             </div>
           </div>
+          <div
+            class="docs-splitter ${this.showDocs ? "visible" : ""}"
+            id="docs-splitter"
+          ></div>
+          <div
+            class="docs-panel ${this.showDocs ? "visible" : ""}"
+            style="flex-basis: ${this.docsPanelWidth}px"
+          >
+            <docs-panel @close=${this.hideDocs}></docs-panel>
+          </div>
         </div>
       </div>
 
+      ${this.showHelp
+        ? html` <help-modal @close=${this.hideHelpModal}></help-modal> `
+        : ""}
       ${this.showSettings
         ? html`
             <settings-modal
@@ -651,6 +859,7 @@ export class FiddleApp extends LitElement {
             ></export-modal>
           `
         : ""}
+      <div class="drag-overlay ${this.isResizingDocs ? "active" : ""}"></div>
     `;
   }
 
@@ -673,9 +882,9 @@ export class FiddleApp extends LitElement {
     }
 
     // Load formatting preference from localStorage
-    const savedFormattingPref = localStorage.getItem('formattingEnabled');
+    const savedFormattingPref = localStorage.getItem("formattingEnabled");
     if (savedFormattingPref !== null) {
-      this.formattingEnabled = savedFormattingPref === 'true';
+      this.formattingEnabled = savedFormattingPref === "true";
     }
 
     // Setup keyboard shortcuts
@@ -685,6 +894,37 @@ export class FiddleApp extends LitElement {
         this.callbacks?.onRunAnimation();
       }
     });
+
+    // Setup docs panel resizer
+    this.setupDocsPanelResizer();
+  }
+
+  private setupDocsPanelResizer() {
+    const docsSplitter = this.shadowRoot?.getElementById("docs-splitter");
+    if (!docsSplitter) return;
+
+    const onMouseDown = (e: MouseEvent) => {
+      this.isResizingDocs = true;
+      this.docsResizeStartX = e.clientX;
+      this.docsResizeStartWidth = this.docsPanelWidth;
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!this.isResizingDocs) return;
+
+      const deltaX = this.docsResizeStartX - e.clientX;
+      const newWidth = Math.max(300, Math.min(800, this.docsResizeStartWidth + deltaX));
+      this.docsPanelWidth = newWidth;
+    };
+
+    const onMouseUp = () => {
+      if (!this.isResizingDocs) return;
+      this.isResizingDocs = false;
+    };
+
+    docsSplitter.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
   }
 
   updatePlayState(playing: boolean) {
@@ -721,7 +961,7 @@ export class FiddleApp extends LitElement {
 
   private toggleFormatting = (): void => {
     this.formattingEnabled = !this.formattingEnabled;
-    localStorage.setItem('formattingEnabled', String(this.formattingEnabled));
+    localStorage.setItem("formattingEnabled", String(this.formattingEnabled));
   };
 
   public isFormattingEnabled(): boolean {
@@ -795,5 +1035,21 @@ export class FiddleApp extends LitElement {
   private handleCancelExport() {
     this.exportController?.cancelExport();
     this.hideExportModal();
+  }
+
+  private showHelpModal() {
+    this.showHelp = true;
+  }
+
+  private hideHelpModal() {
+    this.showHelp = false;
+  }
+
+  private toggleDocs() {
+    this.showDocs = !this.showDocs;
+  }
+
+  private hideDocs() {
+    this.showDocs = false;
   }
 }

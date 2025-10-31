@@ -103,6 +103,7 @@ export class BaseButton extends LitElement {
 
   private handleClick = (e: Event): void => {
     if (!this.disabled) {
+      e.stopPropagation();
       this.dispatchEvent(new CustomEvent('click', {
         detail: e,
         bubbles: true,
