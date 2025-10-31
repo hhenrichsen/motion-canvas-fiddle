@@ -15,6 +15,7 @@ import "./components/security-warning-modal";
 import type { LoadingOverlay } from "./components/loading-overlay";
 import type { FiddleApp } from "./components/fiddle-app";
 import { SecurityWarningModal } from "./components/security-warning-modal";
+import { fetchFromGist, fetchFromUrl } from "./code-loader";
 
 let editor: EditorView;
 let player: any;
@@ -109,8 +110,42 @@ async function init(): Promise<void> {
 
     // Capture initial frame, code, and settings from URL before anything else
     const initialFrame = URLStateManager.getInitialFrame();
-    const initialCode = URLStateManager.getInitialCode();
+    let initialCode = URLStateManager.getInitialCode();
     const initialSettings = URLStateManager.getInitialSettings();
+
+    // Check for Gist or source URL parameters
+    const gistId = URLStateManager.getInitialGist();
+    const srcUrl = URLStateManager.getInitialSrc();
+
+    // Fetch code from external sources if provided
+    // Priority: gist > src > code
+    if (gistId && !initialCode) {
+      try {
+        loading.updateProgress(90, "Loading code from Gist...");
+        initialCode = await fetchFromGist(gistId);
+        // Clear gist parameter and replace with code parameter
+        URLStateManager.clearGist();
+        URLStateManager.updateCode(initialCode);
+      } catch (error) {
+        console.error("Failed to load Gist:", error);
+        app.showError(
+          `Failed to load Gist: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    } else if (srcUrl && !initialCode) {
+      try {
+        loading.updateProgress(90, "Loading code from URL...");
+        initialCode = await fetchFromUrl(srcUrl);
+        // Clear src parameter and replace with code parameter
+        URLStateManager.clearSrc();
+        URLStateManager.updateCode(initialCode);
+      } catch (error) {
+        console.error("Failed to load from URL:", error);
+        app.showError(
+          `Failed to load from URL: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
 
     // Wait for DOM elements to be available
     if (!app.editorContainer || !app.canvas) {
@@ -232,7 +267,7 @@ async function init(): Promise<void> {
     modules.preloadFormatter();
 
     // Check if code came from URL and if we should show security warning
-    const codeFromURL = initialCode !== null;
+    const codeFromURL = initialCode !== null || gistId !== null || srcUrl !== null;
     const shouldShowWarning =
       codeFromURL && !SecurityWarningModal.isWarningDisabled();
 

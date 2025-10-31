@@ -11,6 +11,8 @@ export class URLStateManager {
   private static readonly FRAME_PARAM = "f";
   private static readonly CODE_PARAM = "c";
   private static readonly SETTINGS_PARAM = "s";
+  private static readonly GIST_PARAM = "g";
+  private static readonly SRC_PARAM = "src";
 
   static updateFrame(frame: number): void {
     const url = new URL(window.location.href);
@@ -154,6 +156,28 @@ export class URLStateManager {
     url.searchParams.delete(this.FRAME_PARAM);
     url.searchParams.delete(this.CODE_PARAM);
     url.searchParams.delete(this.SETTINGS_PARAM);
+    window.history.replaceState({}, "", url.toString());
+  }
+
+  static getInitialGist(): string | null {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(this.GIST_PARAM);
+  }
+
+  static getInitialSrc(): string | null {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(this.SRC_PARAM);
+  }
+
+  static clearGist(): void {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(this.GIST_PARAM);
+    window.history.replaceState({}, "", url.toString());
+  }
+
+  static clearSrc(): void {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(this.SRC_PARAM);
     window.history.replaceState({}, "", url.toString());
   }
 }
