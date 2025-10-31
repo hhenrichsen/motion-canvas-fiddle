@@ -471,6 +471,389 @@ export default makeScene2D(function* (view) {
 
 `,
   },
+  {
+    id: "graphing",
+    name: "Graphing",
+    description: "Demonstrates using spidunno's graphing library",
+    code: `import { makeScene2D } from "@motion-canvas/2d";
+import { Vector2 } from "@motion-canvas/core";
+import {
+	MathGrid,
+	MathExpression,
+	MathSpace,
+	MathGraphingCalculator,
+} from "@spidunno/motion-canvas-graphing";
+
+export default makeScene2D(function* (view) {
+	// MathGraphingCalculator is asynchronous, so it must be yielded to ensure it's loaded before rendering.
+	yield view.add(
+		<MathSpace
+			width={() => view.width()}
+			height={() => view.height()}
+			/* \`min\` and \`max\` specify the domain that the \`MathSpace\` should span across */
+			min={new Vector2(-8, -4.5)}
+			max={new Vector2(8, 4.5)}
+		>
+			{/* Minor subdivisions */}
+			<MathGrid lineWidth={1} spacing={[1 / 2, 1 / 2]} stroke="#4e5485" />
+
+			{/* Major subdivisions */}
+			<MathGrid
+				lineWidth={2}
+				spacing={[1, 1]}
+				stroke="#919cff"
+				xAxisStroke={"#f27949"}
+				yAxisStroke={"#71e377"}
+			/>
+
+			<MathGraphingCalculator>
+				<MathExpression
+					/* equations are passed in as LaTeX, an easy way to write these is to write it in Desmos and then copy/paste it here. */
+					equation={String.raw\`y = \\sin(x)\`}
+					stroke="rgb(241, 249, 12)"
+				/>
+			</MathGraphingCalculator>
+		</MathSpace>
+	);
+});`,
+  },
+  {
+    id: "shiki",
+    name: "Shiki Highlighting",
+    description: "Demonstrates using Shiki for syntax highlighting",
+    code: `
+    import {Circle, Code, Rect, makeScene2D} from '@motion-canvas/2d';
+import {all, createRef, waitFor} from '@motion-canvas/core';
+import {ShikiHighlighter} from './shiki';
+
+const H = new ShikiHighlighter({
+  highlighter: {
+    lang: 'asm',
+    theme: 'vitesse-dark',
+  },
+});
+
+export default makeScene2D(function* (view) {
+  const code = createRef<Code>();
+
+  view.add(
+    <Code
+      ref={code}
+      highlighter={H}
+      fontFamily={'JetBrains Mono, monospace'}
+      code={\`\\
+section .text
+   global _start
+
+_start:
+    mov rax, 60
+    mov rdi, 0
+    syscall
+\`}
+    />,
+  );
+
+  const asmCode = \`\\
+section .data
+    input: incbin "../input.txt"
+    input_len: equ $-input
+
+section .text
+   global _start
+
+_start:
+    mov dl, [input + rcx]
+    cmp rdx, \\\\n
+    jne not_new_line
+\`;
+
+  yield* waitFor(0.6);
+  yield* code().code(asmCode, 0.6).wait(0.6).back(0.6).wait(0.6);
+  yield* waitFor(0.6);
+});
+`,
+  },
+  {
+    id: "code-highlighting",
+    name: "Canvas Commons: Code with Syntax Highlighting",
+    description:
+      "Shows how to display code with syntax highlighting and line numbers",
+    code: `import { makeScene2D, Layout, Code, LezerHighlighter } from "@motion-canvas/2d";
+import { createRef, waitFor } from "@motion-canvas/core";
+import { parser as javascript } from "@lezer/javascript";
+import { CatppuccinMochaHighlightStyle } from "@hhenrichsen/canvas-commons/highlightstyle/Catppuccin";
+import { CodeLineNumbers } from "@hhenrichsen/canvas-commons/components/CodeLineNumbers";
+import { Colors } from "@hhenrichsen/canvas-commons";
+
+export default makeScene2D(function* (view) {
+  const code = createRef<Code>();
+  const codeContainer = createRef<Layout>();
+
+  view.add(
+    <Layout layout direction={"row"} gap={20} opacity={0} ref={codeContainer}>
+      <CodeLineNumbers
+        code={code}
+        numberProps={{
+          fill: Colors.Catppuccin.Mocha.Overlay2,
+        }}
+      />
+      <Code
+        ref={code}
+        highlighter={
+          new LezerHighlighter(javascript, CatppuccinMochaHighlightStyle)
+        }
+        code={\`const btn = document.getElementById('btn');
+let count = 0;
+
+function render() {
+  btn.innerHTML = \\\`Count: \\\${count}\\\`;
+}
+
+btn.addEventListener('click', () => {
+  if (count < 10) {
+    count++;
+    render();
+  }
+});\`}
+        fontSize={30}
+      />
+    </Layout>
+  );
+
+  yield* codeContainer().opacity(1, 1);
+  yield* waitFor(1);
+  yield* code().code.append("\\n// This is a comment", 1);
+  yield* waitFor(2);
+});`,
+  },
+  {
+    id: "draw-animation",
+    name: "Canvas Commons: Draw Animation",
+    description: "Demonstrates drawing a shape with animated stroke",
+    code: `import { makeScene2D, Rect } from "@motion-canvas/2d";
+import { createRef, waitFor } from "@motion-canvas/core";
+import { drawIn } from "@hhenrichsen/canvas-commons";
+
+export default makeScene2D(function* (view) {
+  const draw = createRef<Rect>();
+
+  view.add(
+    <Rect
+      radius={5}
+      size={200}
+      ref={draw}
+      lineCap={"round"}
+      strokeFirst
+    />
+  );
+
+  yield* drawIn(draw, "white", "white", 1, true);
+  yield* waitFor(2);
+});`,
+  },
+  {
+    id: "terminal",
+    name: "Canvas Commons: Terminal",
+    description: "Animated terminal with typing effects",
+    code: `import { makeScene2D } from "@motion-canvas/2d";
+import { createRef, waitFor } from "@motion-canvas/core";
+import { Terminal, Window, Colors } from "@hhenrichsen/canvas-commons";
+
+export default makeScene2D(function* (view) {
+  const terminal = createRef<Terminal>();
+  const terminalWindow = createRef<Window>();
+
+  yield view.add(
+    <Window
+      ref={terminalWindow}
+      title={"Terminal"}
+      size={[1200, 800]}
+      headerColor={Colors.Catppuccin.Mocha.Base}
+      bodyColor={Colors.Catppuccin.Mocha.Mantle}
+      buttonColors={[
+        Colors.Catppuccin.Mocha.Red,
+        Colors.Catppuccin.Mocha.Yellow,
+        Colors.Catppuccin.Mocha.Green,
+      ]}
+      icon={"ph:terminal"}
+    >
+      <Terminal
+        ref={terminal}
+        defaultTxtProps={{ fontFamily: "Ellograph CF", fontSize: 30 }}
+        padding={20}
+      />
+    </Window>
+  );
+
+  yield* terminalWindow().open(view, 1);
+  yield* terminal().typeLine("npm init @motion-canvas@latest", 2);
+  yield* waitFor(1);
+  terminal().lineAppear("");
+  terminal().lineAppear("Need to install the following packages:");
+  terminal().lineAppear("  @motion-canvas/create");
+  terminal().lineAppear("Ok to proceed? (y)");
+  yield* waitFor(1);
+  yield* terminal().typeAfterLine(" y", 1);
+  terminal().lineAppear([
+    { text: "? Project name " },
+    { text: "»", fill: Colors.Catppuccin.Mocha.Surface2 },
+  ]);
+  yield* waitFor(1);
+  yield* terminal().typeAfterLine(" my-animation");
+  yield* waitFor(2);
+});`,
+  },
+  {
+    id: "plot-random",
+    name: "Canvas Commons: Plot with Random Data",
+    description: "Line plot with randomly generated data points",
+    code: `import { makeScene2D } from "@motion-canvas/2d";
+import { createRef, range, useRandom, waitFor } from "@motion-canvas/core";
+import { Plot, LinePlot } from "@hhenrichsen/canvas-commons";
+
+export default makeScene2D(function* (view) {
+  const random = useRandom();
+  const plot = createRef<Plot>();
+
+  view.add(
+    <Plot
+      size={500}
+      ref={plot}
+      labelX="Time"
+      labelY="Values"
+      labelSize={10}
+      opacity={0}
+    >
+      <LinePlot
+        lineWidth={4}
+        stroke={"red"}
+        data={range(0, 26).map((i) => [i * 4, random.nextInt(0, 100)])}
+      />
+    </Plot>
+  );
+
+  yield* plot().opacity(1, 2);
+  yield* waitFor(2);
+  yield* plot().ticks(20, 3);
+  yield* plot().size(800, 2);
+  yield* waitFor(2);
+});`,
+  },
+  {
+    id: "plot-sine",
+    name: "Canvas Commons: Plot Sine Wave",
+    description: "Animated sine wave using mathematical function",
+    code: `import { makeScene2D } from "@motion-canvas/2d";
+import { createRef, waitFor } from "@motion-canvas/core";
+import { Plot, LinePlot } from "@hhenrichsen/canvas-commons";
+
+export default makeScene2D(function* (view) {
+  const plot = createRef<Plot>();
+  const line = createRef<LinePlot>();
+
+  view.add(
+    <Plot
+      clip
+      size={500}
+      ref={plot}
+      labelSize={0}
+      min={[-Math.PI * 2, -2]}
+      max={[Math.PI * 2, 2]}
+      labelFormatterX={(x) => \`\${Math.round(x / Math.PI)}π\`}
+      ticks={[4, 4]}
+      opacity={0}
+    >
+      <LinePlot lineWidth={4} stroke={"red"} end={0} ref={line} />
+    </Plot>
+  );
+
+  line().data(plot().makeGraphData(0.1, (x) => Math.sin(x)));
+
+  yield* plot().opacity(1, 2);
+  yield* waitFor(2);
+  yield* line().end(1, 2);
+  yield* waitFor(2);
+});`,
+  },
+  {
+    id: "plot-scatter",
+    name: "Canvas Commons: Scatter Plot",
+    description: "Animated scatter plot with random data",
+    code: `import { makeScene2D } from "@motion-canvas/2d";
+import { createRef, range, useRandom, waitFor, linear } from "@motion-canvas/core";
+import { Plot, ScatterPlot } from "@hhenrichsen/canvas-commons";
+
+export default makeScene2D(function* (view) {
+  const random = useRandom();
+  const plot = createRef<Plot>();
+  const scatter = createRef<ScatterPlot>();
+
+  view.add(
+    <Plot
+      size={500}
+      ref={plot}
+      labelX="Time"
+      labelY="Errors"
+      labelSize={10}
+      opacity={0}
+    >
+      <ScatterPlot
+        pointRadius={5}
+        pointColor={"red"}
+        ref={scatter}
+        start={0.5}
+        end={0.5}
+        data={range(0, 26).map((i) => [i * 4, random.nextInt(0, 100)])}
+      />
+    </Plot>
+  );
+
+  yield* plot().opacity(1, 2);
+  yield* waitFor(2);
+  yield scatter().end(1, 3, linear);
+  yield* waitFor(0.1);
+  yield* scatter().start(0, 3, linear);
+  yield* waitFor(2);
+});`,
+  },
+  {
+    id: "plot-parabola",
+    name: "Canvas Commons: Plot Parabola",
+    description: "Animated parabola using mathematical function",
+    code: `import { makeScene2D } from "@motion-canvas/2d";
+import { createRef, waitFor } from "@motion-canvas/core";
+import { Plot, LinePlot } from "@hhenrichsen/canvas-commons";
+
+export default makeScene2D(function* (view) {
+  const plot = createRef<Plot>();
+  const line = createRef<LinePlot>();
+
+  view.add(
+    <Plot
+      clip
+      size={500}
+      ref={plot}
+      labelSize={0}
+      minX={-10}
+      maxX={10}
+      minY={-2}
+      maxY={50}
+      opacity={0}
+      ticks={[4, 4]}
+      offset={[-1, 0]}
+    >
+      <LinePlot lineWidth={4} stroke={"red"} ref={line} />
+    </Plot>
+  );
+
+  line().data(plot().makeGraphData(0.1, (x) => Math.pow(x, 2)));
+
+  yield* plot().opacity(1, 2);
+  yield* waitFor(2);
+  yield* line().end(1, 2);
+  yield* waitFor(2);
+});`,
+  },
 ];
 
 @customElement("templates-modal")
@@ -481,6 +864,54 @@ export class TemplatesModal extends BaseModal {
   static styles = [
     BaseModal.styles,
     css`
+      .modal-content {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        max-height: 80vh;
+      }
+
+      .modal-body {
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-height: calc(80vh - 140px);
+      }
+
+      .modal-footer {
+        position: sticky;
+        bottom: 0;
+        margin-top: auto;
+      }
+
+      /* Custom scrollbar styling to match CodeMirror */
+      .modal-body::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+      }
+
+      .modal-body::-webkit-scrollbar-track {
+        background: var(--ctp-mocha-base);
+      }
+
+      .modal-body::-webkit-scrollbar-thumb {
+        background: var(--ctp-mocha-surface2);
+        border: 2px solid var(--ctp-mocha-base);
+      }
+
+      .modal-body::-webkit-scrollbar-thumb:hover {
+        background: var(--ctp-mocha-overlay0);
+      }
+
+      .modal-body::-webkit-scrollbar-corner {
+        background: var(--ctp-mocha-base);
+      }
+
+      /* Firefox scrollbar styling */
+      .modal-body {
+        scrollbar-width: thin;
+        scrollbar-color: var(--ctp-mocha-surface2) var(--ctp-mocha-base);
+      }
+
       .templates-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -549,7 +980,7 @@ export class TemplatesModal extends BaseModal {
               <h4 class="template-name">${template.name}</h4>
               <p class="template-description">${template.description}</p>
             </div>
-          `,
+          `
         )}
       </div>
     `;
@@ -585,7 +1016,7 @@ export class TemplatesModal extends BaseModal {
         detail: template.code,
         bubbles: true,
         composed: true,
-      }),
+      })
     );
   }
 }
