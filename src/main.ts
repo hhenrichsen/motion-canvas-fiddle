@@ -27,7 +27,31 @@ async function runAnimation(preserveFrame?: number): Promise<void> {
 
   try {
     const code = modules.getEditorContent(editor);
-    const scene = await modules.compileScene(code);
+
+    // Get compilation mode from settings
+    const compilationMode = localStorage.getItem('compilationMode') || 'auto';
+    const forceWebContainer = compilationMode === 'webcontainer';
+    const forceBabel = compilationMode === 'babel';
+
+    // Create logger that writes to the console component
+    const outputConsole = app.getConsole();
+    const logger = outputConsole ? {
+      log: (msg: string) => outputConsole.log(msg),
+      error: (msg: string) => outputConsole.error(msg),
+      warn: (msg: string) => outputConsole.warn(msg),
+      info: (msg: string) => outputConsole.info(msg),
+    } : undefined;
+
+    // Show compilation progress
+    const scene = await modules.compileScene(code, {
+      forceWebContainer,
+      forceBabel,
+      logger,
+      onProgress: (progress) => {
+        console.log(`[${progress.stage}] ${progress.message} (${progress.progress}%)`);
+        outputConsole?.info(`${progress.message} (${progress.progress}%)`);
+      },
+    });
 
     await player.updateScene(scene);
 
@@ -41,9 +65,10 @@ async function runAnimation(preserveFrame?: number): Promise<void> {
         }
       }, 200);
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Animation error:", error);
-    app.showError(error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    app.showError(errorMessage);
   }
 }
 

@@ -3,19 +3,20 @@ import type { EditorOptions } from "./editor";
 import type { MotionCanvasPlayer } from "./player";
 import type { UIController } from "./ui";
 import type { SplitterController } from "./splitter";
+import type { CompileOptions } from "./compiler";
 
 export interface LazyModules {
   createEditor: (container: HTMLElement, options: EditorOptions) => EditorView;
   resetEditorToDefault: (editor: EditorView) => void;
   getEditorContent: (editor: EditorView) => string;
   DEFAULT_CODE: string;
-  compileScene: (code: string) => Promise<any>;
+  compileScene: (code: string, options?: CompileOptions) => Promise<unknown>;
   MotionCanvasPlayer: typeof MotionCanvasPlayer;
   UIController: typeof UIController;
   SplitterController: typeof SplitterController;
-  MotionCanvasCore: any;
-  MotionCanvas2D: any;
-  loadCanvasCommons: () => Promise<any>;
+  MotionCanvasCore: unknown;
+  MotionCanvas2D: unknown;
+  loadCanvasCommons: () => Promise<unknown>;
 }
 
 let cachedModules: LazyModules | null = null;
@@ -74,8 +75,11 @@ export async function loadCoreModules(
     resetEditorToDefault: editorModule.resetEditorToDefault,
     getEditorContent: editorModule.getEditorContent,
     DEFAULT_CODE: editorModule.DEFAULT_CODE,
-    compileScene: (code: string) =>
-      compilerModule.compileScene(code, loadCanvasCommons),
+    compileScene: (code: string, options?: CompileOptions) =>
+      compilerModule.compileScene(code, {
+        ...options,
+        loadCanvasCommons: options?.loadCanvasCommons || loadCanvasCommons,
+      }),
     MotionCanvasPlayer: playerModule.MotionCanvasPlayer,
     UIController: uiModule.UIController,
     SplitterController: splitterModule.SplitterController,
@@ -86,13 +90,16 @@ export async function loadCoreModules(
 
   updateProgress(95, "Setting up global modules...");
 
+  // Import JSX runtime for proper JSX handling
+  const jsxRuntime = await import('@motion-canvas/2d/lib/jsx-runtime');
+
   // Set up global modules for user code access
   (window as any).CanvasCore = MotionCanvasCore;
   (window as any).Canvas2D = {
     ...MotionCanvas2D,
-    jsx: MotionCanvas2D.jsx || ((type: any, props: any) => ({ type, props })),
-    jsxs: MotionCanvas2D.jsxs || ((type: any, props: any) => ({ type, props })),
-    Fragment: MotionCanvas2D.Fragment || "div",
+    jsx: jsxRuntime.jsx,
+    jsxs: jsxRuntime.jsxs,
+    Fragment: jsxRuntime.Fragment,
   };
 
   updateProgress(100, "Ready!");

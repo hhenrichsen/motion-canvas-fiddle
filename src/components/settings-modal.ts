@@ -27,6 +27,12 @@ export class SettingsModal extends BaseModal {
   @state()
   private urlCodeWarningDisabled = false;
 
+  @state()
+  private compilationMode: 'auto' | 'babel' | 'webcontainer' = 'auto';
+
+  @state()
+  private crossOriginIsolated = false;
+
   static styles = [
     BaseModal.styles,
     css`
@@ -124,6 +130,15 @@ export class SettingsModal extends BaseModal {
     }
 
     this.urlCodeWarningDisabled = SecurityWarningModal.isWarningDisabled();
+
+    // Load compilation mode from localStorage
+    const savedMode = localStorage.getItem('compilationMode');
+    if (savedMode === 'auto' || savedMode === 'babel' || savedMode === 'webcontainer') {
+      this.compilationMode = savedMode;
+    }
+
+    // Check cross-origin isolation status
+    this.crossOriginIsolated = window.crossOriginIsolated || false;
   }
 
   protected renderBody(): TemplateResult {
@@ -181,6 +196,24 @@ export class SettingsModal extends BaseModal {
           <button class="clear-btn" @click=${this.clearBackground}>
             Clear
           </button>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <label for="compilation-mode-select">Compilation Mode</label>
+        <select
+          id="compilation-mode-select"
+          .value=${this.compilationMode}
+          @change=${this.handleCompilationModeChange}
+        >
+          <option value="auto">Auto (detect features)</option>
+          <option value="babel">Always use Babel</option>
+          <option value="webcontainer">Always use Vite (WebContainer)</option>
+        </select>
+        <div style="color: var(--ctp-mocha-overlay0); font-size: 12px; margin-top: 8px;">
+          ${this.crossOriginIsolated
+            ? html`✓ WebContainer available (cross-origin isolated)`
+            : html`⚠ WebContainer unavailable (not cross-origin isolated)`}
         </div>
       </div>
 
@@ -244,6 +277,16 @@ export class SettingsModal extends BaseModal {
     }
   };
 
+  private handleCompilationModeChange = (e: Event): void => {
+    if (isHTMLSelectElement(e.target)) {
+      const value = e.target.value;
+      if (value === 'auto' || value === 'babel' || value === 'webcontainer') {
+        this.compilationMode = value;
+        localStorage.setItem('compilationMode', value);
+      }
+    }
+  };
+
   private handleApply = (): void => {
     const settings: ProjectSettings = {
       width: this.width,
@@ -253,4 +296,8 @@ export class SettingsModal extends BaseModal {
     };
     this.dispatchEvent(new CustomEvent("apply", { detail: settings }));
   };
+
+  public getCompilationMode(): 'auto' | 'babel' | 'webcontainer' {
+    return this.compilationMode;
+  }
 }

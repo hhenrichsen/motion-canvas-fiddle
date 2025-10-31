@@ -7,6 +7,8 @@ import "./player-controls";
 import "./settings-modal";
 import "./export-modal";
 import "./base-button";
+import "./output-console";
+import type { OutputConsole } from "./output-console";
 
 export interface AppCallbacks {
   onResetCode: () => void;
@@ -49,11 +51,20 @@ export class FiddleApp extends LitElement {
   @state()
   private exportProgress?: ExportProgress;
 
+  @state()
+  private showConsole = false;
+
+  @state()
+  private consoleMessageCount = 0;
+
   @query("#editor")
   editorContainer!: HTMLDivElement;
 
   @query("#canvas")
   canvas!: HTMLCanvasElement;
+
+  @query("output-console")
+  outputConsole?: OutputConsole;
 
   private exportController?: ExportController;
 
@@ -149,6 +160,79 @@ export class FiddleApp extends LitElement {
       flex: 0 0 50%;
       min-width: 300px;
       position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .editor-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .editor-console-wrapper {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .editor-console-wrapper.with-console #editor {
+      flex: 0 0 60%;
+    }
+
+    .editor-console-wrapper.with-console output-console {
+      flex: 0 0 40%;
+      min-height: 100px;
+    }
+
+    output-console {
+      display: none;
+    }
+
+    .editor-console-wrapper.with-console output-console {
+      display: flex;
+    }
+
+    .console-toggle-btn {
+      background: transparent;
+      border: 1px solid var(--ctp-mocha-surface2);
+      color: var(--ctp-mocha-text);
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .console-toggle-btn:hover {
+      background: var(--ctp-mocha-surface0);
+      border-color: var(--ctp-mocha-sky);
+    }
+
+    .console-toggle-btn.active {
+      background: var(--ctp-mocha-sky);
+      color: var(--ctp-mocha-base);
+      border-color: var(--ctp-mocha-sky);
+    }
+
+    .console-badge {
+      background: var(--ctp-mocha-overlay0);
+      color: var(--ctp-mocha-base);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 11px;
+      opacity: 0.5;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .console-toggle-btn.active .console-badge {
+      background: var(--ctp-mocha-base);
+      color: var(--ctp-mocha-sky);
     }
 
     .preview-panel {
@@ -427,17 +511,44 @@ export class FiddleApp extends LitElement {
           <div class="editor-panel">
             <div class="panel-header desktop-only">
               <span>Editor</span>
-              <button class="run-btn" @click=${this.handleRunAnimation} title="Save and run animation (Ctrl+S)">
-                <img src="${import.meta.env.BASE_URL}save.svg" alt="Save & Run" />
-              </button>
+              <div style="display: flex; gap: 8px;">
+                <button
+                  class="console-toggle-btn ${this.showConsole ? 'active' : ''}"
+                  @click=${this.toggleConsole}
+                  title="Toggle console output"
+                >
+                  Console
+                  ${this.consoleMessageCount > 0
+                    ? html`<span class="console-badge">${this.consoleMessageCount}</span>`
+                    : ''}
+                </button>
+                <button class="run-btn" @click=${this.handleRunAnimation} title="Save and run animation (Ctrl+S)">
+                  <img src="${import.meta.env.BASE_URL}save.svg" alt="Save & Run" />
+                </button>
+              </div>
             </div>
             <div class="panel-header mobile-only">
               <span>Editor</span>
-              <button class="run-btn" @click=${this.handleRunAnimation} title="Save and run animation (Ctrl+S)">
-                <img src="${import.meta.env.BASE_URL}save.svg" alt="Save & Run" />
-              </button>
+              <div style="display: flex; gap: 8px;">
+                <button
+                  class="console-toggle-btn ${this.showConsole ? 'active' : ''}"
+                  @click=${this.toggleConsole}
+                  title="Toggle console output"
+                >
+                  Console
+                  ${this.consoleMessageCount > 0
+                    ? html`<span class="console-badge">${this.consoleMessageCount}</span>`
+                    : ''}
+                </button>
+                <button class="run-btn" @click=${this.handleRunAnimation} title="Save and run animation (Ctrl+S)">
+                  <img src="${import.meta.env.BASE_URL}save.svg" alt="Save & Run" />
+                </button>
+              </div>
             </div>
-            <div id="editor"></div>
+            <div class="editor-console-wrapper ${this.showConsole ? 'with-console' : ''}">
+              <div id="editor"></div>
+              <output-console @messagecount=${this.handleMessageCount}></output-console>
+            </div>
           </div>
           <div class="splitter" id="splitter"></div>
           <div class="mobile-splitter" id="mobile-splitter">
@@ -547,6 +658,22 @@ export class FiddleApp extends LitElement {
   hideError() {
     this.errorMessage = "";
   }
+
+  public getConsole(): OutputConsole | undefined {
+    return this.outputConsole;
+  }
+
+  public updateConsoleMessageCount(count: number): void {
+    this.consoleMessageCount = count;
+  }
+
+  private toggleConsole = (): void => {
+    this.showConsole = !this.showConsole;
+  };
+
+  private handleMessageCount = (e: CustomEvent<number>): void => {
+    this.consoleMessageCount = e.detail;
+  };
 
   private handleResetCode() {
     this.callbacks?.onResetCode();

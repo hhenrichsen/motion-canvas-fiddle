@@ -1,11 +1,72 @@
+import { detectFeatures, isWebContainerAvailable, explainFeatures } from './feature-detector';
+import { compileWithWebContainer, type CompilationProgress, type Logger } from './webcontainer-compiler';
+
 interface CompilationContext {
   hasCanvasCommons: boolean;
 }
 
+export interface CompileOptions {
+  loadCanvasCommons?: () => Promise<unknown>;
+  onProgress?: (progress: CompilationProgress) => void;
+  forceWebContainer?: boolean;
+  forceBabel?: boolean;
+  logger?: Logger;
+}
+
 export async function compileScene(
   code: string,
-  loadCanvasCommons?: () => Promise<any>
-): Promise<any> {
+  options?: CompileOptions | (() => Promise<unknown>)
+): Promise<unknown> {
+  // Handle legacy API (loadCanvasCommons function as second parameter)
+  const opts: CompileOptions = typeof options === 'function'
+    ? { loadCanvasCommons: options }
+    : options || {};
+
+  // Detect features that might require WebContainer
+  const features = detectFeatures(code);
+
+  console.log('[Compiler] Feature detection:', features);
+  console.log('[Compiler]', explainFeatures(features));
+
+  // Determine compilation strategy
+  const shouldUseWebContainer =
+    !opts.forceBabel &&
+    (opts.forceWebContainer || features.needsWebContainer) &&
+    isWebContainerAvailable();
+
+  if (shouldUseWebContainer) {
+    console.log('[Compiler] Using WebContainer (Vite) compilation');
+    opts.logger?.info('[Compiler] Using WebContainer (Vite) compilation');
+    try {
+      // Load canvas-commons if needed
+      if (features.externalPackages.includes('@hhenrichsen/canvas-commons') && opts.loadCanvasCommons) {
+        await opts.loadCanvasCommons();
+      }
+
+      return await compileWithWebContainer(code, features, opts.onProgress, opts.logger);
+    } catch (error) {
+      console.error('[Compiler] WebContainer compilation failed:', error);
+
+      // Fall back to Babel if WebContainer fails (unless forced)
+      if (opts.forceWebContainer) {
+        throw error;
+      }
+
+      console.warn('[Compiler] Falling back to Babel compilation');
+      opts.logger?.warn('[Compiler] Falling back to Babel compilation');
+      return await compileWithBabel(code, opts.loadCanvasCommons);
+    }
+  } else {
+    console.log('[Compiler] Using Babel compilation');
+    opts.logger?.info('[Compiler] Using Babel compilation');
+    return await compileWithBabel(code, opts.loadCanvasCommons);
+  }
+}
+
+async function compileWithBabel(
+  code: string,
+  loadCanvasCommons?: () => Promise<unknown>
+): Promise<unknown> {
   try {
     const Babel = await import("@babel/standalone");
 
@@ -218,7 +279,7 @@ function replaceImportsWithGlobals(code: string): string {
   return finalCode;
 }
 
-async function executeCompiledCode(code: string): Promise<any> {
+async function executeCompiledCode(code: string): Promise<{ default: unknown }> {
   const blob = new Blob([code], { type: "application/javascript" });
   const url = URL.createObjectURL(blob);
 
