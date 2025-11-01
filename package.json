@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "npm run build:sw && vite",
-    "build": "tsc && npm run build:sw && vite build",
+    "build": "npm run generate:props && tsc && npm run build:sw && vite build",
     "build:sw": "esbuild src/service-worker.ts --bundle --outfile=public/service-worker.js --format=iife --target=es2020",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:props": "node scripts/extract-component-props.mjs"
   },
   "devDependencies": {
     "@types/babel__standalone": "^7.1.9",

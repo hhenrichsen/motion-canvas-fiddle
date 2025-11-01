@@ -2,6 +2,8 @@ import { javascriptLanguage } from "@codemirror/lang-javascript";
 import { syntaxTree } from "@codemirror/language";
 import type { CompletionContext, Completion } from "@codemirror/autocomplete";
 import type { EditorView } from "@codemirror/view";
+import { formatCode } from "./formatter";
+import { jsxAttributeCompletion } from "./jsx-autocomplete";
 
 function isConstructor(obj: unknown): boolean {
   if (typeof obj !== "function") return false;
@@ -37,6 +39,7 @@ function loadModule(
             : "function"
           : "variable",
       package: packageName,
+      detail: packageName,
       apply: (
         view: EditorView,
         completion: Completion,
@@ -64,22 +67,25 @@ function addImportIfNeeded(
   const doc = view.state.doc.toString();
   const lines = doc.split("\n");
 
-  // Check if the symbol is already imported from this package
+  const escapedPackage = packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  // Check if the symbol is already imported from this package (supports multi-line)
   const importRegex = new RegExp(
-    `import\\s+{[^}]*\\b${symbol}\\b[^}]*}\\s+from\\s+['"]${packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}['"]`,
+    `import\\s+{[^}]*\\b${symbol}\\b[^}]*}\\s+from\\s+['"]${escapedPackage}['"]`,
+    "s",
   );
   if (importRegex.test(doc)) {
-    return; // Already imported
+    return;
   }
 
-  // Find existing import from the same package
+  // Find existing import from the same package (supports multi-line imports)
   const existingImportRegex = new RegExp(
-    `import\\s+{([^}]*)}\\s+from\\s+['"]${packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}['"]`,
+    `import\\s+\\{([^}]*)\\}\\s+from\\s+['"]${escapedPackage}['"][;]?`,
+    "s",
   );
   const existingImportMatch = doc.match(existingImportRegex);
 
   if (existingImportMatch) {
-    // Add to existing import
     const existingImports = existingImportMatch[1];
     const importStart = doc.indexOf(existingImportMatch[0]);
     const importEnd = importStart + existingImportMatch[0].length;
@@ -97,9 +103,11 @@ function addImportIfNeeded(
     view.dispatch({
       changes: { from: importStart, to: importEnd, insert: newImport },
     });
+
+    // Format the entire document after import modification
+    formatAndUpdate(view);
   } else {
     // Add new import statement
-    // Find the position after the last import or at the beginning
     let insertPos = 0;
     let lastImportLine = -1;
 
@@ -112,7 +120,6 @@ function addImportIfNeeded(
     }
 
     if (lastImportLine !== -1) {
-      // Insert after the last import
       insertPos = lines.slice(0, lastImportLine + 1).join("\n").length + 1;
     }
 
@@ -121,7 +128,26 @@ function addImportIfNeeded(
     view.dispatch({
       changes: { from: insertPos, insert: newImport },
     });
+
+    // Format the entire document after import modification
+    formatAndUpdate(view);
   }
+}
+
+function formatAndUpdate(view: EditorView): void {
+  const doc = view.state.doc.toString();
+
+  formatCode(doc)
+    .then((formatted) => {
+      if (formatted !== doc) {
+        view.dispatch({
+          changes: { from: 0, to: doc.length, insert: formatted },
+        });
+      }
+    })
+    .catch((error) => {
+      console.warn("Failed to format after import:", error);
+    });
 }
 
 // Load Motion Canvas modules for autocompletion
@@ -289,6 +315,9 @@ function addLezerParserImport(view: EditorView, language: string): void {
   view.dispatch({
     changes: { from: insertPos, insert: newImport },
   });
+
+  // Format the entire document after import modification
+  formatAndUpdate(view);
 }
 
 export function autocomplete() {
@@ -300,6 +329,13 @@ export function autocomplete() {
       );
       if (nodeBefore.name === "String") return;
 
+      // Try JSX attribute completion first
+      const jsxResult = jsxAttributeCompletion(context);
+      if (jsxResult) {
+        return jsxResult;
+      }
+
+      // Fall back to symbol/import completion
       const word = context.matchBefore(/\w*/);
       if (!word || (word.from === word.to && !context.explicit)) return null;
       return {
