@@ -35,12 +35,12 @@ export class ShikiHighlighter implements CodeHighlighter<ThemedToken[]> {
     BundledTheme
   > | null> | null;
 
-  constructor(shikiOptions: ShikiOptions) {
+  public constructor(shikiOptions: ShikiOptions) {
     this.shikiOptions = shikiOptions;
     this.handle = null;
   }
 
-  initialize(): boolean {
+  public initialize(): boolean {
     if (this.handle?.value !== undefined) {
       return true;
     } else {
@@ -49,33 +49,32 @@ export class ShikiHighlighter implements CodeHighlighter<ThemedToken[]> {
           ...this.shikiOptions.highlighter,
           langs: [this.shikiOptions.highlighter.lang],
           themes: [this.shikiOptions.highlighter.theme],
-        }),
+        })
       );
 
       return false;
     }
   }
 
-  prepare(code: string): ThemedToken[] {
-    if (!this.handle?.value) {
-      return [];
-    }
-
-    const result = this.handle.value.codeToTokens(
+  public prepare(code: string): ThemedToken[] {
+    const result = this.handle?.value?.codeToTokens(
       code,
-      this.codeToTokensOptions(),
+      this.codeToTokensOptions()
     );
 
-    return result.tokens.flat();
+    return result?.tokens.flat() ?? [];
   }
 
-  highlight(index: number, cache: ThemedToken[]): HighlightResult {
-    const token = cache.find((token) => token.offset === index);
+  public highlight(index: number, cache: ThemedToken[]): HighlightResult {
+    const token = cache.find(
+      (token) =>
+        token.offset <= index && index < token.offset + token.content.length
+    );
 
     if (token) {
       return {
         color: token.color ?? null,
-        skipAhead: token.content.length,
+        skipAhead: token.offset + token.content.length - index,
       };
     } else {
       return {
@@ -85,23 +84,19 @@ export class ShikiHighlighter implements CodeHighlighter<ThemedToken[]> {
     }
   }
 
-  tokenize(code: string): string[] {
-    if (!this.handle?.value) {
-      return [];
-    }
-
-    const lineTokens = this.handle.value
-      .codeToTokens(code, this.codeToTokensOptions())
+  public tokenize(code: string): string[] {
+    const lineTokens = this.handle?.value
+      ?.codeToTokens(code, this.codeToTokensOptions())
       .tokens.map((line) => line.map(({ content }) => content));
 
-    const tokens = lineTokens.flatMap((line, i) =>
-      i === lineTokens.length - 1 ? line : [...line, "\n"],
+    const tokens = lineTokens?.flatMap((line, i) =>
+      i === lineTokens.length - 1 ? line : [...line, "\n"]
     );
 
-    return tokens;
+    return tokens ?? [];
   }
 
-  codeToTokensOptions() {
+  private codeToTokensOptions() {
     return this.shikiOptions.codeToTokens !== undefined
       ? this.shikiOptions.codeToTokens
       : {
