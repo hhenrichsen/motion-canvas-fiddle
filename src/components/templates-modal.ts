@@ -191,6 +191,85 @@ export default makeScene2D(function* (view) {
 `,
   },
   {
+    id: "bubble-sort-code-viz",
+    name: "Bubble Sort Code Highlighting",
+    description: "Demonstrates bubble sort algorithm with code highlighting",
+    code: `import {
+  Code,
+  Layout,
+  LezerHighlighter,
+  Rect,
+  lines,
+  makeScene2D,
+} from '@motion-canvas/2d';
+import {all, createRef, waitFor} from '@motion-canvas/core';
+import {parser as python} from '@lezer/python';
+import {
+  CatppuccinMochaHighlightStyle,
+  Colors,
+} from '@hhenrichsen/canvas-commons';
+
+export default makeScene2D(function* (view) {
+  const code = createRef<Code>();
+  const highlightRect = createRef<Rect>();
+  const highlighter = new LezerHighlighter(
+    python,
+    CatppuccinMochaHighlightStyle,
+  );
+
+  view.add(
+    <Layout cache compositeOperation={'exclusion'}>
+      <Rect
+        ref={highlightRect}
+        width={0}
+        height={0}
+        fill={Colors.Catppuccin.Mocha.Blue}
+        opacity={0.5}
+        radius={8}
+      />
+      <Code
+        highlighter={highlighter}
+        ref={code}
+        code={\`\\
+def bubble_sort(a):
+  for i in range(len(a)):
+    for j in range(len(a) - 1):
+      if a[j] > a[j + 1]:
+        a[j], a[j + 1] = a[j + 1], a[j]
+  return a
+\`}
+      ></Code>
+    </Layout>,
+  );
+
+  const highlightLine = function* (idx: number, duration: number = 0.2) {
+    const bbox = code().getSelectionBBox(lines(idx, idx))[0];
+    yield* all(
+      highlightRect().width(bbox.width + 10, duration),
+      highlightRect().height(bbox.height + 10, duration),
+      highlightRect().x(bbox.x + bbox.width / 2, duration),
+      highlightRect().y(bbox.y + bbox.height / 2, duration),
+    );
+  };
+
+  yield* highlightLine(0, 0);
+  const a = [5, 3, 2, 4, 1];
+  for (let i = 0; i < a.length; i++) {
+    yield* highlightLine(1);
+    for (let j = 0; j < a.length - 1; j++) {
+      yield* highlightLine(2);
+      yield* highlightLine(3);
+      if (a[j] > a[j + 1]) {
+        [a[j], a[j + 1]] = [a[j + 1], a[j]];
+        yield* highlightLine(4);
+      }
+    }
+  }
+  yield* highlightLine(5);
+  yield* waitFor(1);
+});`
+  },
+  {
     id: "fractions",
     name: "Reciprocal Fractions",
     description: "Demonstrates reciprocal fractions",
