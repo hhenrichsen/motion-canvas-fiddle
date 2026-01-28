@@ -884,8 +884,11 @@ export class FiddleApp extends LitElement {
     `;
   }
 
-  firstUpdated() {
-    if (this.player) {
+  updated(changedProperties: Map<string | number | symbol, unknown>) {
+    super.updated(changedProperties);
+
+    // Initialize export controller when player becomes available
+    if (changedProperties.has("player") && this.player && !this.exportController) {
       this.exportController = new ExportController(this.player, {
         onProgress: (progress: ExportProgress) => {
           this.exportProgress = progress;
@@ -901,7 +904,9 @@ export class FiddleApp extends LitElement {
         },
       });
     }
+  }
 
+  firstUpdated() {
     // Load formatting preference from localStorage
     const savedFormattingPref = localStorage.getItem("formattingEnabled");
     if (savedFormattingPref !== null) {
