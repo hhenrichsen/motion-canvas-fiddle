@@ -705,7 +705,7 @@ export class FiddleApp extends LitElement {
                 src="${import.meta.env.BASE_URL}video-image.svg"
                 alt="Export"
               />
-              <span class="button-text">Export MP4</span>
+              <span class="button-text">Export</span>
             </base-button>
           </div>
         </div>
@@ -889,20 +889,24 @@ export class FiddleApp extends LitElement {
 
     // Initialize export controller when player becomes available
     if (changedProperties.has("player") && this.player && !this.exportController) {
-      this.exportController = new ExportController(this.player, {
-        onProgress: (progress: ExportProgress) => {
-          this.exportProgress = progress;
-        },
-        onComplete: () => {
-          setTimeout(() => {
+      this.exportController = new ExportController(
+        this.player,
+        {
+          onProgress: (progress: ExportProgress) => {
+            this.exportProgress = progress;
+          },
+          onComplete: () => {
+            setTimeout(() => {
+              this.hideExportModal();
+            }, 2000);
+          },
+          onError: (error: string) => {
+            this.showError(`Export failed: ${error}`);
             this.hideExportModal();
-          }, 2000);
+          },
         },
-        onError: (error: string) => {
-          this.showError(`Export failed: ${error}`);
-          this.hideExportModal();
-        },
-      });
+        () => this.canvas,
+      );
     }
   }
 
@@ -1055,7 +1059,21 @@ export class FiddleApp extends LitElement {
     }
 
     try {
-      await this.exportController.exportMP4(settings);
+      if (settings.format === "gif") {
+        await this.exportController.exportGIF({
+          fps: settings.fps,
+          quality: settings.quality,
+          scale: settings.scale,
+          dither: settings.dither,
+        });
+      } else {
+        await this.exportController.exportMP4({
+          fps: settings.fps,
+          quality: settings.quality,
+          videoBitrate: settings.videoBitrate,
+          videoCodec: settings.videoCodec,
+        });
+      }
     } catch (error) {
       this.showError(error instanceof Error ? error.message : String(error));
     }

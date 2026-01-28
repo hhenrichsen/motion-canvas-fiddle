@@ -25,12 +25,16 @@ export class UIController {
   setPlayer(player: MotionCanvasPlayer): void {
     this.player = player;
     this.currentFps = player.currentFps;
-    this.exportController = new ExportController(player, {
-      onProgress: (progress: ExportProgress) =>
-        this.updateExportProgress(progress),
-      onComplete: () => this.onExportComplete(),
-      onError: (error: string) => this.onExportError(error),
-    });
+    this.exportController = new ExportController(
+      player,
+      {
+        onProgress: (progress: ExportProgress) =>
+          this.updateExportProgress(progress),
+        onComplete: () => this.onExportComplete(),
+        onError: (error: string) => this.onExportError(error),
+      },
+      () => document.getElementById("canvas") as HTMLCanvasElement | null,
+    );
   }
 
   async initialize(): Promise<void> {
