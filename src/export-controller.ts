@@ -1,6 +1,7 @@
 import { MP4Exporter, ExportSettings, downloadBlob } from "./mp4-exporter";
 import { GIFExporter, GIFExportSettings } from "./gif-exporter";
 import { MotionCanvasPlayer } from "./player";
+import { trackEvent } from "./analytics";
 
 export interface ExportProgress {
   phase: "preparing" | "exporting" | "finalizing" | "complete";
@@ -45,6 +46,14 @@ export class ExportController {
     };
 
     const exportSettings = { ...defaultSettings, ...settings };
+
+    // Track export event
+    trackEvent("export_animation", {
+      format: "mp4",
+      fps: exportSettings.fps,
+      quality: exportSettings.quality,
+      video_bitrate: exportSettings.videoBitrate,
+    });
 
     this.isExporting = true;
 
@@ -171,6 +180,14 @@ export class ExportController {
     };
 
     const exportSettings = { ...defaultSettings, ...settings };
+
+    // Track export event
+    trackEvent("export_animation", {
+      format: "gif",
+      fps: exportSettings.fps,
+      quality: exportSettings.quality,
+      scale: exportSettings.scale,
+    });
 
     this.isExporting = true;
 

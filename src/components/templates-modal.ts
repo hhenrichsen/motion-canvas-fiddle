@@ -2,6 +2,7 @@ import { html, css, type TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { BaseModal } from "./base-modal.js";
 import "./base-button.js";
+import { trackEvent } from "../analytics";
 
 export interface Template {
   id: string;
@@ -1089,6 +1090,12 @@ export class TemplatesModal extends BaseModal {
 
     const template = TEMPLATES.find((t) => t.id === this.selectedTemplate);
     if (!template) return;
+
+    // Track template usage
+    trackEvent("use_template", {
+      template_id: template.id,
+      template_name: template.name,
+    });
 
     this.dispatchEvent(
       new CustomEvent("apply", {

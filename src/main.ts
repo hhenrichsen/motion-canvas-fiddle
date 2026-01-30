@@ -18,6 +18,7 @@ import { SecurityWarningModal } from "./components/security-warning-modal";
 import { fetchFromGist, fetchFromUrl } from "./code-loader";
 import { schedulePrefetch } from "./prefetch";
 import "./register-service-worker"; // Auto-registers service worker
+import { initAnalytics, trackEvent } from "./analytics";
 
 let editor: EditorView;
 let player: any;
@@ -108,6 +109,9 @@ async function init(): Promise<void> {
       loading.updateProgress(progress, message);
     });
 
+    // Initialize analytics (fire-and-forget - don't await, don't block app)
+    initAnalytics();
+
     // Create and add the main app component
     app = document.createElement("fiddle-app") as FiddleApp;
     document.body.appendChild(app);
@@ -133,6 +137,11 @@ async function init(): Promise<void> {
         // Clear gist parameter and replace with code parameter
         URLStateManager.clearGist();
         URLStateManager.updateCode(initialCode);
+        // Track gist load
+        trackEvent("load_code_from_url", {
+          source: "gist",
+          gist_id: gistId,
+        });
       } catch (error) {
         console.error("Failed to load Gist:", error);
         app.showError(
@@ -146,12 +155,21 @@ async function init(): Promise<void> {
         // Clear src parameter and replace with code parameter
         URLStateManager.clearSrc();
         URLStateManager.updateCode(initialCode);
+        // Track src URL load
+        trackEvent("load_code_from_url", {
+          source: "src_url",
+        });
       } catch (error) {
         console.error("Failed to load from URL:", error);
         app.showError(
           `Failed to load from URL: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
+    } else if (initialCode) {
+      // Track encoded code in URL (code was already in the URL, not from gist or src)
+      trackEvent("load_code_from_url", {
+        source: "encoded",
+      });
     }
 
     // Wait for DOM elements to be available

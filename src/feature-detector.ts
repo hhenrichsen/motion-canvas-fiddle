@@ -178,6 +178,75 @@ function detectExternalPackages(code: string): string[] {
   return externalPackages;
 }
 
+// Packages to exclude from analytics (always used, not interesting)
+const ANALYTICS_EXCLUDED_PACKAGES = new Set([
+  "@motion-canvas/core",
+  "@motion-canvas/2d",
+]);
+
+// Special relative imports that map to known packages
+const SPECIAL_RELATIVE_IMPORTS: Record<string, string> = {
+  "./shiki": "ShikiHighlighter",
+};
+
+/**
+ * Detect ALL package imports for analytics (includes bundled packages)
+ * Excludes core Motion Canvas packages since they're always used.
+ */
+export function detectAllPackages(code: string): string[] {
+  const packages: string[] = [];
+
+  // Remove comments to avoid false positives
+  const codeWithoutComments = removeComments(code);
+
+  // Match import statements
+  const importPattern = /import\s+(?:[\w{},\s*]+\s+from\s+)?['"]([^'"]+)['"]/g;
+
+  let match: RegExpExecArray | null;
+  const seenPackages = new Set<string>();
+
+  while ((match = importPattern.exec(codeWithoutComments)) !== null) {
+    const importPath = match[1];
+
+    // Check for special relative imports first
+    if (SPECIAL_RELATIVE_IMPORTS[importPath]) {
+      const mappedPackage = SPECIAL_RELATIVE_IMPORTS[importPath];
+      if (!seenPackages.has(mappedPackage)) {
+        seenPackages.add(mappedPackage);
+        packages.push(mappedPackage);
+      }
+      continue;
+    }
+
+    // Skip other relative imports (start with . or /)
+    if (importPath.startsWith(".") || importPath.startsWith("/")) {
+      continue;
+    }
+
+    // Extract package name (handle scoped packages like @org/package)
+    let packageName: string;
+    if (importPath.startsWith("@")) {
+      // Scoped package: @org/package or @org/package/subpath
+      const parts = importPath.split("/");
+      packageName = parts.length >= 2 ? `${parts[0]}/${parts[1]}` : importPath;
+    } else {
+      // Regular package: package or package/subpath
+      packageName = importPath.split("/")[0];
+    }
+
+    // Skip excluded packages and duplicates
+    if (
+      !ANALYTICS_EXCLUDED_PACKAGES.has(packageName) &&
+      !seenPackages.has(packageName)
+    ) {
+      seenPackages.add(packageName);
+      packages.push(packageName);
+    }
+  }
+
+  return packages;
+}
+
 /**
  * Generate a user-friendly explanation of why WebContainer is needed
  */

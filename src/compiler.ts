@@ -1,5 +1,6 @@
 import {
   detectFeatures,
+  detectAllPackages,
   isWebContainerAvailable,
   explainFeatures,
 } from "./feature-detector";
@@ -9,6 +10,7 @@ import {
   type Logger,
 } from "./webcontainer-compiler";
 import { canUseWebContainer } from "./offline";
+import { trackEvent } from "./analytics";
 
 interface CompilationContext {
   hasCanvasCommons: boolean;
@@ -63,6 +65,15 @@ export async function compileScene(
     !opts.forceBabel &&
     (opts.forceWebContainer || features.needsWebContainer) &&
     isWebContainerAvailable();
+
+  // Track build event (use detectAllPackages for analytics to include bundled packages)
+  trackEvent("build_animation", {
+    compiler: shouldUseWebContainer ? "webcontainer" : "babel",
+    packages: detectAllPackages(code),
+    external_packages: features.externalPackages,
+    needs_webcontainer: features.needsWebContainer,
+    has_decorators: features.hasDecorators,
+  });
 
   if (shouldUseWebContainer) {
     console.log("[Compiler] Using WebContainer (Vite) compilation");
